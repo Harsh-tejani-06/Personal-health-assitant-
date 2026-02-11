@@ -1,13 +1,39 @@
 import { useState } from "react";
 import ai_assistant from "../assets/image.png";
+import { signupUser, loginUser } from "../services/authService";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [fullname, setFullname] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = async () => {
+    try {
+      if (isLogin) {
+        // LOGIN
+        await loginUser({ email, password });
+        alert("Login successful");
+      } else {
+        // SIGNUP
+        await signupUser({ fullname, email, password });
+        alert("Signup successful");
+      }
+
+      navigate("/"); // redirect after login
+    } catch (err) {
+      alert(err.response?.data?.message || "Something went wrong");
+    }
+  };
+
 
   return (
     // <div className="w-screen h-screen bg-linear-to-br from-[#9b8cff] via-[#5b4fd6] to-[#0b0b0f] flex items-center justify-center">
     <div className="w-screen h-screen bg-linear-to-br from-[#2a0748] via-[#7f2dd0] to-[#0b0b0f] flex items-center justify-center">
-      
+
       {/* Main container */}
       <div className="w-275 h-155 bg-[#0f172a] rounded-2xl shadow-2xl flex overflow-hidden">
 
@@ -97,6 +123,8 @@ export default function Auth() {
               <input
                 type="text"
                 placeholder="Full Name"
+                value={fullname}
+                onChange={(e) => setFullname(e.target.value)}
                 className="
           w-full rounded-lg px-4 py-3 mb-4
           border border-gray-300
@@ -111,6 +139,8 @@ export default function Auth() {
             <input
               type="email"
               placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="
         w-full rounded-lg px-4 py-3 mb-4
         border border-gray-300
@@ -124,6 +154,8 @@ export default function Auth() {
             <input
               type="password"
               placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="
         w-full rounded-lg px-4 py-3 mb-6
         border border-gray-300
@@ -135,6 +167,7 @@ export default function Auth() {
             />
 
             <button
+              onClick={handleSubmit}
               className="
         w-full bg-[#6e2593] text-white py-3 cursor-pointer rounded-lg
         font-semibold
