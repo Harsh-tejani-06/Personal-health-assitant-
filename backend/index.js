@@ -3,6 +3,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import aiProxyRoutes from "./routes/aiRoutes.js";
+
+
+
 
 
 import authRoutes from "./routes/authRoutes.js";
@@ -17,7 +21,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api", profileRoutes);
-
+app.use("/api", aiProxyRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend running");

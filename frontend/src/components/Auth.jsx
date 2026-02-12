@@ -2,6 +2,8 @@ import { useState } from "react";
 import ai_assistant from "../assets/image.png";
 import { signupUser, loginUser } from "../services/authService";
 import { useNavigate } from "react-router-dom";
+import { getOnboardingStatus } from "../services/profileService";
+
 
 
 export default function Auth() {
@@ -11,18 +13,17 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
   try {
-    if (isLogin) {
-      await loginUser({ email, password });
-      alert("Login successful");
-    } else {
-      await signupUser({ fullname, email, password });
-      alert("Signup successful");
-    }
+    await loginUser({ email, password });
 
-    // IMPORTANT: redirect to questionnaire
-    navigate("/questionnaire");
+    const status = await getOnboardingStatus();
+
+    if (status.completed) {
+      navigate("/dashboard");
+    } else {
+      navigate("/questionnaire");
+    }
 
   } catch (err) {
     alert(err.response?.data?.message || "Something went wrong");
