@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { saveHealthProfile, generateAIQuestions } from "../services/profileService";
+
 
 export default function Questionnaire() {
 
@@ -20,6 +22,7 @@ export default function Questionnaire() {
     waterIntakeLiters: ""
   });
 
+
   const handleChange = (e) => {
 
     setForm({
@@ -29,13 +32,25 @@ export default function Questionnaire() {
 
   };
 
-  const handleSubmit = () => {
+const handleSubmit = async () => {
+  try {
+    // Save profile
+    await saveHealthProfile(form);
 
-    console.log("User Profile Data:", form);
+    // Generate AI questions with data
+    await generateAIQuestions(form);
 
-    navigate("/dashboard");
+    navigate("/ai-questions");
 
-  };
+  } catch (err) {
+    console.log(err.response?.data || err.message);
+    alert("AI generation failed");
+  }
+};
+
+
+
+
 
   return (
 
