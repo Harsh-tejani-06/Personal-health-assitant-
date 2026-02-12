@@ -12,22 +12,22 @@ export default function Auth() {
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
-    try {
-      if (isLogin) {
-        // LOGIN
-        await loginUser({ email, password });
-        alert("Login successful");
-      } else {
-        // SIGNUP
-        await signupUser({ fullname, email, password });
-        alert("Signup successful");
-      }
-
-      navigate("/"); // redirect after login
-    } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong");
+  try {
+    if (isLogin) {
+      await loginUser({ email, password });
+      alert("Login successful");
+    } else {
+      await signupUser({ fullname, email, password });
+      alert("Signup successful");
     }
-  };
+
+    // IMPORTANT: redirect to questionnaire
+    navigate("/questionnaire");
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Something went wrong");
+  }
+};
 
 
   return (

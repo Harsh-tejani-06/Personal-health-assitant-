@@ -12,7 +12,7 @@ export default function GetStarted() {
 
       {/* Main container */}
       <div className="relative w-250 h-165 bg-[#14141a]/95 rounded-2xl p-12 shadow-2xl backdrop-blur-md animate-fade-up">
-
+      
         {/* Title */}
         <h1 className="text-4xl font-bold text-center mb-10 text-white">
           <span className="text-[#b89cff]">Personal Health Assistant</span>
