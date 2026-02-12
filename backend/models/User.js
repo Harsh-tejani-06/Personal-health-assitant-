@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
- fullname: {
+  fullname: {
     type: String,
     required: true
   },
@@ -14,14 +14,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-
-  // Health personalization fields (as discussed)
-  age: Number,
-  gender: String,
-  weight: Number,
-  height: Number,
-  conditions: [String],
-  goals: [String]
 }, { timestamps: true });
 
-export default mongoose.model("User", userSchema);
+export default mongoose.models.User || mongoose.model("User", userSchema);
+
