@@ -20,7 +20,6 @@ export default function Sidebar({ open, setOpen }) {
   const menu = [
     { name: "Dashboard", path: "/dashboard", icon: "📊", color: "from-[#06b6d4] to-[#0891b2]" },
     { name: "Exercise", path: "/exercise", icon: "💪", color: "from-[#10b981] to-[#059669]" },
-    { name: "Diet", path: "/diet", icon: "🥗", color: "from-[#f59e0b] to-[#d97706]" },
     { name: "Skin Care", path: "/skin-care", icon: "✨", color: "from-[#ec4899] to-[#db2777]" },
     { name: "Recipes", path: "/recipes", icon: "🍳", color: "from-[#8b5cf6] to-[#7c3aed]" },
     { name: "AI Assistant", path: "/chatbot", icon: "🤖", color: "from-[#06b6d4] to-[#10b981]" }
@@ -138,7 +137,7 @@ export default function Sidebar({ open, setOpen }) {
           {/* User Mini Profile */}
           <div className={`flex items-center gap-3 p-3 rounded-xl bg-slate-50 ${!open && 'justify-center'}`}>
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#06b6d4] to-[#10b981] flex items-center justify-center text-white text-xs font-bold">
-              VV
+              HT
             </div>
             {open && (
               <div className="flex-1 min-w-0">

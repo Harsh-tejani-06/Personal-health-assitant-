@@ -11,7 +11,7 @@ router.post("/ai-generate", protect, async (req, res) => {
     console.log("User:", req.user._id);
     console.log("Body:", req.body);
 
-    const response = await fetch("http://127.0.0.1:8000/generate", {
+    const response = await fetch("http://127.0.0.1:8000/questions/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

@@ -8,7 +8,6 @@ import MainLayout from "./components/layout/MainLayout";
 
 import Dashboard from "./components/pages/Dashboard";
 import Exercise from "./components/pages/Exercise";
-import Diet from "./components/pages/Diet";
 import SkinCare from "./components/pages/SkinCare";
 import Recipes from "./components/pages/Recipes";
 import Chatbot from "./components/pages/Chatbot";
@@ -26,7 +25,6 @@ export default function App() {
 
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/exercise" element={<Exercise />} />
-          <Route path="/diet" element={<Diet />} />
           <Route path="/skin-care" element={<SkinCare />} />
           <Route path="/recipes" element={<Recipes />} />
           <Route path="/chatbot" element={<Chatbot />} />
