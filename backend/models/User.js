@@ -58,6 +58,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  avatar: {
+    type: String,
+    default: ""
+  },
   email: {
     type: String,
     required: true,
@@ -67,7 +71,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-    onboardingCompleted: {
+  onboardingCompleted: {
     type: Boolean,
     default: false
   },

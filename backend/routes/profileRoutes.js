@@ -2,12 +2,34 @@ import express from "express";
 import {
   saveHealthProfile,
   getProfile,
-  saveLLMAnswers
+  saveLLMAnswers,
+  uploadAvatar
 } from "../controllers/profileController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import User from "../models/User.js";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Multer Config
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "../uploads/"));
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}${path.extname(file.originalname)}`);
+  },
+});
+
+const upload = multer({ storage });
 
 const router = express.Router();
+
+// Upload Avatar
+router.post("/upload-avatar", protect, upload.single("avatar"), uploadAvatar);
 
 // Save static questionnaire
 router.post("/profile", protect, saveHealthProfile);
