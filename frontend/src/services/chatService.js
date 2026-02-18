@@ -29,3 +29,18 @@ export const sendMessageStream = async (message) => {
 
     return response;
 };
+
+// -------- Recipe Chat (date-based) --------
+
+// Get all recipe chat dates
+export const getRecipeDates = async () => {
+    const res = await API.get("/recipes/dates");
+    return res.data;
+};
+
+// Get recipe messages for a specific date
+export const getRecipeHistory = async (date) => {
+    const res = await API.get(`/recipes/history/${date}`);
+    return res.data;
+};
+

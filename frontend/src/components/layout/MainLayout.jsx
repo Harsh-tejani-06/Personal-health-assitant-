@@ -6,10 +6,10 @@ export default function MainLayout() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen text-slate-800 relative">
+    <div className="bg-[#f8fafc] dark:bg-[#0f172a] min-h-screen text-slate-800 dark:text-slate-200 relative transition-colors duration-300">
       {/* Background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#f0f9ff] via-[#e0f2fe] to-[#f0fdf4] pointer-events-none" />
-      
+      <div className="fixed inset-0 bg-gradient-to-br from-[#f0f9ff] via-[#e0f2fe] to-[#f0fdf4] dark:from-[#0f172a] dark:via-[#1e293b] dark:to-[#0f172a] pointer-events-none transition-colors duration-300" />
+
       {/* Sidebar */}
       <Sidebar open={open} setOpen={setOpen} />
 

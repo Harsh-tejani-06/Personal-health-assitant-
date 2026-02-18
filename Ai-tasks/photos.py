@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, Form
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import COR+SMiddleware
 from dotenv import load_dotenv
 import google.generativeai as genai
 from PIL import Image

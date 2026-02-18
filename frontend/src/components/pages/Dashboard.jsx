@@ -22,19 +22,19 @@ export default function Dashboard() {
     if (hour < 12) setGreeting("Good morning");
     else if (hour < 17) setGreeting("Good afternoon");
     else setGreeting("Good evening");
-    
-    setCurrentDate(new Date().toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+
+    setCurrentDate(new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     }));
 
     const timer = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
+      setCurrentTime(new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
         minute: '2-digit',
-        hour12: true 
+        hour12: true
       }));
     }, 1000);
     return () => clearInterval(timer);
@@ -76,53 +76,53 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-800 p-4 md:p-6 lg:p-8 relative overflow-hidden">
-      
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-transparent text-slate-800 dark:text-slate-200 p-4 md:p-6 lg:p-8 relative overflow-hidden transition-colors duration-300">
+
       {/* Subtle background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#f0f9ff] via-[#f8fafc] to-[#f0fdf4] pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#f0f9ff] via-[#f8fafc] to-[#f0fdf4] dark:from-transparent dark:via-transparent dark:to-transparent pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto space-y-6">
-        
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-[#0891b2] text-sm font-medium">{currentDate}</span>
-              <span className="text-slate-300">|</span>
-              <span className="text-[#0891b2] text-sm font-mono">{currentTime}</span>
+              <span className="text-[#0891b2] dark:text-[#22d3ee] text-sm font-medium">{currentDate}</span>
+              <span className="text-slate-300 dark:text-slate-600">|</span>
+              <span className="text-[#0891b2] dark:text-[#22d3ee] text-sm font-mono">{currentTime}</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-800">
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-white">
               {greeting}, <span className="text-[#b89cff]">{user.fullname.split(' ')[0]}</span>! 👋
             </h1>
           </div>
-          <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-2 border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-2xl px-4 py-2 border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="w-3 h-3 bg-[#10b981] rounded-full animate-pulse" />
-            <span className="text-slate-600 text-sm font-medium">All systems active</span>
+            <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">All systems active</span>
           </div>
         </div>
 
         {/* TOP SECTION */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Card */}
-          <div className="lg:col-span-2 bg-white rounded-3xl shadow-xl border border-slate-100 p-6 md:p-8">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 md:p-8 transition-colors">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <div className="relative">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] p-1">
                   <img
                     src={user.avatar}
                     alt="Profile"
-                    className="w-full h-full rounded-full object-cover border-4 border-white"
+                    className="w-full h-full rounded-full object-cover border-4 border-white dark:border-slate-800"
                   />
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#10b981] rounded-full flex items-center justify-center text-white text-sm border-4 border-white">
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#10b981] rounded-full flex items-center justify-center text-white text-sm border-4 border-white dark:border-slate-800">
                   ✓
                 </div>
               </div>
-              
+
               <div className="flex-1">
                 <p className="text-[#b89cff] text-sm font-medium mb-1">Health Enthusiast</p>
-                <h2 className="text-2xl font-bold text-slate-800 mb-4">{user.fullname}</h2>
-                
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">{user.fullname}</h2>
+
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <LightStatCard title="Height" value={`${user.height} cm`} icon="📏" />
                   <LightStatCard title="Weight" value={`${user.weight} kg`} icon="⚖️" />
@@ -137,7 +137,7 @@ export default function Dashboard() {
           <div className="bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] rounded-3xl shadow-xl p-6 md:p-8 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-10 -mt-10 blur-2xl" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-10 -mb-10 blur-xl" />
-            
+
             <div className="relative">
               <p className="text-white/80 text-sm font-medium uppercase tracking-wider mb-2">
                 Current Streak
@@ -147,7 +147,7 @@ export default function Dashboard() {
                 <span className="text-5xl md:text-6xl font-bold text-white">{user.streak}</span>
               </div>
               <p className="text-white/80 text-lg mb-4">Days in a row</p>
-              
+
               <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/30">
                 <p className="text-sm text-white">
                   🎉 Keep it up! You're building great habits consistently.
@@ -160,17 +160,17 @@ export default function Dashboard() {
         {/* MIDDLE SECTION */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Today's Activity */}
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
+          <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 transition-colors">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+              <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#b89cff]"></span>
                 Today's Activity
               </h3>
-              <span className="text-xs bg-[#b89cff]/10 text-[#7f2dd0] px-3 py-1 rounded-full font-medium border border-[#b89cff]/20">
+              <span className="text-xs bg-[#b89cff]/10 text-[#7f2dd0] dark:text-[#c4b5fd] px-3 py-1 rounded-full font-medium border border-[#b89cff]/20">
                 {new Date().toLocaleDateString('en-US', { weekday: 'short' })}
               </span>
             </div>
-            
+
             <div className="space-y-3">
               <LightActivityRow label="Morning Exercise" value={today.Exercise} time="7:00 AM" icon="🏃" />
               <LightActivityRow label="Healthy Diet" value={today.Diet} time="12:30 PM" icon="🥗" />
@@ -178,12 +178,12 @@ export default function Dashboard() {
               <LightActivityRow label="Water Intake" value={today.Water} time="Ongoing" icon="💧" />
             </div>
 
-            <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-[#b89cff]/10 to-[#7f2dd0]/5 border border-[#b89cff]/20">
+            <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-[#b89cff]/10 to-[#7f2dd0]/5 dark:from-[#b89cff]/20 dark:to-[#7f2dd0]/10 border border-[#b89cff]/20">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">💡</span>
                 <div>
-                  <p className="text-sm font-semibold text-slate-800 mb-1">Daily Insight</p>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-white mb-1">Daily Insight</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
                     You've completed 75% of today's habits. Finish strong with your skincare routine!
                   </p>
                 </div>
@@ -192,9 +192,9 @@ export default function Dashboard() {
           </div>
 
           {/* Weekly Chart */}
-          <div className="lg:col-span-2 bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 transition-colors">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+              <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#10b981]"></span>
                 Weekly Habit Tracking
               </h3>
@@ -204,32 +204,32 @@ export default function Dashboard() {
                 <LightLegendItem color="#38bdf8" label="Skin Care" />
               </div>
             </div>
-            
+
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={habitData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
-                  <XAxis 
-                    dataKey="day" 
-                    stroke="#94a3b8" 
+                  <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} className="[.dark_&]:stroke-slate-700 stroke-slate-100" />
+                  <XAxis
+                    dataKey="day"
+                    stroke="#94a3b8"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                   />
-                  <YAxis 
-                    stroke="#94a3b8" 
+                  <YAxis
+                    stroke="#94a3b8"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                     domain={[0, 1]}
                     tickFormatter={(v) => v === 1 ? "✓" : "○"}
                   />
-                  <Tooltip 
+                  <Tooltip
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-white p-3 rounded-xl shadow-lg border border-slate-100">
-                            <p className="font-bold text-slate-800 mb-2">{label}</p>
+                          <div className="bg-white dark:bg-slate-700 p-3 rounded-xl shadow-lg border border-slate-100 dark:border-slate-600">
+                            <p className="font-bold text-slate-800 dark:text-white mb-2">{label}</p>
                             {payload.map((entry, index) => (
                               <p key={index} className="text-sm" style={{ color: entry.color }}>
                                 {entry.name}: {entry.value === 1 ? 'Completed ✓' : 'Missed ○'}
@@ -252,34 +252,34 @@ export default function Dashboard() {
 
         {/* BOTTOM SECTION */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <LightQuickStatCard 
-            title="Weekly Exercise" 
-            value="5/7 days" 
+          <LightQuickStatCard
+            title="Weekly Exercise"
+            value="5/7 days"
             subtitle="71% consistency"
             icon="🏃"
             color="#b89cff"
             progress={71}
           />
-          
-          <LightQuickStatCard 
-            title="Diet Adherence" 
-            value="85%" 
+
+          <LightQuickStatCard
+            title="Diet Adherence"
+            value="85%"
             subtitle="Great job!"
             icon="🥗"
             color="#10b981"
             progress={85}
           />
-          
-          <LightQuickStatCard 
-            title="Skin Care Routine" 
-            value="6/7 days" 
+
+          <LightQuickStatCard
+            title="Skin Care Routine"
+            value="6/7 days"
             subtitle="86% consistency"
             icon="✨"
             color="#38bdf8"
             progress={86}
           />
-          
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 flex items-center gap-4">
+
+          <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 flex items-center gap-4 transition-colors">
             <div className="w-20 h-20 relative">
               <PieChart width={80} height={80}>
                 <Pie
@@ -299,27 +299,27 @@ export default function Dashboard() {
                 </Pie>
               </PieChart>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-slate-800">75%</span>
+                <span className="text-lg font-bold text-slate-800 dark:text-white">75%</span>
               </div>
             </div>
             <div>
-              <p className="text-slate-500 text-sm font-medium">Weekly Goal</p>
-              <p className="text-2xl font-bold text-slate-800">On Track</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Weekly Goal</p>
+              <p className="text-2xl font-bold text-slate-800 dark:text-white">On Track</p>
               <p className="text-xs text-[#b89cff] font-medium">+5% from last week</p>
             </div>
           </div>
         </div>
 
         {/* Health Tip */}
-        <div className="bg-gradient-to-r from-[#b89cff]/10 via-[#f0f9ff] to-[#b89cff]/10 rounded-2xl p-6 border border-[#b89cff]/20">
+        <div className="bg-gradient-to-r from-[#b89cff]/10 via-[#f0f9ff] to-[#b89cff]/10 dark:from-[#b89cff]/20 dark:via-slate-800/50 dark:to-[#b89cff]/20 rounded-2xl p-6 border border-[#b89cff]/20">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] rounded-xl flex items-center justify-center text-white text-2xl shrink-0">
               🎯
             </div>
             <div className="flex-1">
-              <h4 className="font-bold text-slate-800 mb-1">Today's Health Focus</h4>
-              <p className="text-slate-600 text-sm">
-                Based on your profile, we recommend focusing on <span className="font-semibold text-[#b89cff]">hydration</span> today. 
+              <h4 className="font-bold text-slate-800 dark:text-white mb-1">Today's Health Focus</h4>
+              <p className="text-slate-600 dark:text-slate-400 text-sm">
+                Based on your profile, we recommend focusing on <span className="font-semibold text-[#b89cff]">hydration</span> today.
                 Aim for 3 liters of water to support your fitness goals and skin health.
               </p>
             </div>
@@ -336,18 +336,17 @@ export default function Dashboard() {
 // Light Theme Components (matching sidebar)
 function LightStatCard({ title, value, subtitle, icon, highlight = false, color }) {
   return (
-    <div className={`p-4 rounded-2xl border transition-all duration-300 ${
-      highlight 
-        ? 'bg-[#b89cff]/10 border-[#b89cff]/30' 
-        : 'bg-slate-50 border-slate-200 hover:border-[#b89cff]/30'
-    }`}>
+    <div className={`p-4 rounded-2xl border transition-all duration-300 ${highlight
+        ? 'bg-[#b89cff]/10 border-[#b89cff]/30'
+        : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 hover:border-[#b89cff]/30'
+      }`}>
       <div className="flex items-center gap-2 mb-2">
         <span className="text-lg">{icon}</span>
-        <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">
+        <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider font-semibold">
           {title}
         </p>
       </div>
-      <p className={`text-xl font-bold ${highlight ? 'text-[#7f2dd0]' : 'text-slate-800'}`}>
+      <p className={`text-xl font-bold ${highlight ? 'text-[#7f2dd0] dark:text-[#c4b5fd]' : 'text-slate-800 dark:text-white'}`}>
         {value}
       </p>
       {subtitle && (
@@ -362,27 +361,25 @@ function LightStatCard({ title, value, subtitle, icon, highlight = false, color 
 function LightActivityRow({ label, value, time, icon }) {
   const isDone = value === "Done" || value.includes("L");
   const isPending = value === "Pending";
-  
+
   return (
-    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-[#b89cff]/30 transition-all group">
+    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:border-[#b89cff]/30 transition-all group">
       <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${
-          isDone ? 'bg-[#10b981]/10' : isPending ? 'bg-[#f59e0b]/10' : 'bg-slate-100'
-        }`}>
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${isDone ? 'bg-[#10b981]/10' : isPending ? 'bg-[#f59e0b]/10' : 'bg-slate-100 dark:bg-slate-600'
+          }`}>
           {icon}
         </div>
         <div>
-          <p className="font-semibold text-slate-800 text-sm">{label}</p>
-          <p className="text-xs text-slate-500">{time}</p>
+          <p className="font-semibold text-slate-800 dark:text-white text-sm">{label}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{time}</p>
         </div>
       </div>
-      <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${
-        isDone 
-          ? 'bg-[#10b981]/10 text-[#059669] border border-[#10b981]/20' 
-          : isPending 
-          ? 'bg-[#f59e0b]/10 text-[#d97706] border border-[#f59e0b]/20'
-          : 'bg-red-50 text-red-600 border border-red-200'
-      }`}>
+      <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${isDone
+          ? 'bg-[#10b981]/10 text-[#059669] dark:text-[#34d399] border border-[#10b981]/20'
+          : isPending
+            ? 'bg-[#f59e0b]/10 text-[#d97706] dark:text-[#fbbf24] border border-[#f59e0b]/20'
+            : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
+        }`}>
         {value}
       </span>
     </div>
@@ -391,7 +388,7 @@ function LightActivityRow({ label, value, time, icon }) {
 
 function LightLegendItem({ color, label }) {
   return (
-    <div className="flex items-center gap-2 text-xs text-slate-500">
+    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
       <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }}></span>
       {label}
     </div>
@@ -400,22 +397,22 @@ function LightLegendItem({ color, label }) {
 
 function LightQuickStatCard({ title, value, subtitle, icon, color, progress }) {
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
+    <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 transition-colors">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{title}</p>
           <p className="text-3xl font-bold" style={{ color }}>{value}</p>
-          <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>
         </div>
-        <div 
+        <div
           className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
           style={{ backgroundColor: `${color}15`, color: color }}
         >
           {icon}
         </div>
       </div>
-      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-        <div 
+      <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+        <div
           className="h-full rounded-full transition-all duration-1000"
           style={{ width: `${progress}%`, backgroundColor: color }}
         />

@@ -6,6 +6,9 @@ import profileRoutes from "./routes/profileRoutes.js";
 import aiProxyRoutes from "./routes/aiRoutes.js";
 import recipeRoutes from "./routes/recipeRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
+import dietRoutes from "./routes/dietRoutes.js";
+import activityRoutes from "./routes/activityRoutes.js";
+import gamificationRoutes from "./routes/gamificationRoutes.js";
 import path from "path";
 
 // Serve uploads folder
@@ -27,6 +30,9 @@ app.use("/api", profileRoutes);
 app.use("/api", aiProxyRoutes);
 app.use("/api", recipeRoutes);
 app.use("/api", chatbotRoutes);
+app.use("/api", dietRoutes);
+app.use("/api", activityRoutes);
+app.use("/api", gamificationRoutes);
 
 
 app.get("/", (req, res) => {

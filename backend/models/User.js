@@ -67,7 +67,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-    onboardingCompleted: {
+  onboardingCompleted: {
     type: Boolean,
     default: false
   },
@@ -75,7 +75,13 @@ const userSchema = new mongoose.Schema({
   healthProfile: healthProfileSchema,
 
   // Gemini generated questions
-  aiQuestions: [aiQuestionSchema]
+  aiQuestions: [aiQuestionSchema],
+
+  // Gamification
+  totalPoints: { type: Number, default: 0 },
+  currentStreak: { type: Number, default: 0 },
+  longestStreak: { type: Number, default: 0 },
+  lastActivityDate: { type: String, default: "" } // "YYYY-MM-DD"
 
 }, { timestamps: true });
 

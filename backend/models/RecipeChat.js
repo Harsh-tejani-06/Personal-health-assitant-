@@ -20,11 +20,14 @@ const recipeChatSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
-  messages: [messageSchema],
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  date: {
+    type: String, // "YYYY-MM-DD"
+    required: true
+  },
+  messages: [messageSchema]
+}, { timestamps: true });
+
+// One document per user per date
+recipeChatSchema.index({ user: 1, date: 1 }, { unique: true });
 
 export default mongoose.model("RecipeChat", recipeChatSchema);
