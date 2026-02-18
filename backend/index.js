@@ -9,12 +9,17 @@ import chatbotRoutes from "./routes/chatbotRoutes.js";
 import dietRoutes from "./routes/dietRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
 import gamificationRoutes from "./routes/gamificationRoutes.js";
+
+import authRoutes from "./routes/authRoutes.js";
 import path from "path";
 
 // Serve uploads folder
 
 
-import authRoutes from "./routes/authRoutes.js";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 connectDB();
@@ -34,6 +39,7 @@ app.use("/api", dietRoutes);
 app.use("/api", activityRoutes);
 app.use("/api", gamificationRoutes);
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
   res.send("Backend running");

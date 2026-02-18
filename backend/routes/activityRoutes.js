@@ -101,43 +101,24 @@ async function calculatePoints(userId, activity) {
 }
 
 // =================================================
-// 1. POST /api/activity/log — Log/update daily activity
+// 1. GET /api/activity/history — Get last 30 days (MUST be before :date)
 // =================================================
-router.post("/activity/log", protect, async (req, res) => {
+router.get("/activity/history", protect, async (req, res) => {
     try {
-        const { date, type, completed, details, duration } = req.body;
-        const userId = req.user._id;
-        const targetDate = date || getTodayDate();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const cutoffDate = thirtyDaysAgo.toISOString().split("T")[0];
 
-        if (!["exercise", "diet", "skinCare"].includes(type)) {
-            return res.status(400).json({ message: "Invalid activity type. Use exercise, diet, or skinCare." });
-        }
+        const activities = await DailyActivity.find({
+            user: req.user._id,
+            date: { $gte: cutoffDate }
+        }).sort({ date: -1 });
 
-        // Find or create activity for this date
-        let activity = await DailyActivity.findOne({ user: userId, date: targetDate });
-        if (!activity) {
-            activity = new DailyActivity({ user: userId, date: targetDate });
-        }
-
-        // Update the specific activity
-        activity[type].completed = completed;
-        if (details !== undefined) activity[type].details = details;
-        if (type === "exercise" && duration !== undefined) activity[type].duration = duration;
-
-        await activity.save();
-
-        // Calculate and award points
-        const pointsData = await calculatePoints(userId, activity);
-
-        res.json({
-            success: true,
-            activity,
-            points: pointsData
-        });
+        res.json({ activities });
 
     } catch (err) {
-        console.error("Activity log error:", err);
-        res.status(500).json({ message: "Failed to log activity" });
+        console.error("Activity history error:", err);
+        res.status(500).json({ message: "Failed to load activity history" });
     }
 });
 
@@ -175,24 +156,43 @@ router.get("/activity/:date", protect, async (req, res) => {
 });
 
 // =================================================
-// 3. GET /api/activity/history — Get last 30 days activity
+// 3. POST /api/activity/log — Log/update daily activity
 // =================================================
-router.get("/activity/history", protect, async (req, res) => {
+router.post("/activity/log", protect, async (req, res) => {
     try {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const cutoffDate = thirtyDaysAgo.toISOString().split("T")[0];
+        const { date, type, completed, details, duration } = req.body;
+        const userId = req.user._id;
+        const targetDate = date || getTodayDate();
 
-        const activities = await DailyActivity.find({
-            user: req.user._id,
-            date: { $gte: cutoffDate }
-        }).sort({ date: -1 });
+        if (!["exercise", "diet", "skinCare"].includes(type)) {
+            return res.status(400).json({ message: "Invalid activity type. Use exercise, diet, or skinCare." });
+        }
 
-        res.json({ activities });
+        // Find or create activity for this date
+        let activity = await DailyActivity.findOne({ user: userId, date: targetDate });
+        if (!activity) {
+            activity = new DailyActivity({ user: userId, date: targetDate });
+        }
+
+        // Update the specific activity
+        activity[type].completed = completed;
+        if (details !== undefined) activity[type].details = details;
+        if (type === "exercise" && duration !== undefined) activity[type].duration = duration;
+
+        await activity.save();
+
+        // Calculate and award points
+        const pointsData = await calculatePoints(userId, activity);
+
+        res.json({
+            success: true,
+            activity,
+            points: pointsData
+        });
 
     } catch (err) {
-        console.error("Activity history error:", err);
-        res.status(500).json({ message: "Failed to load activity history" });
+        console.error("Activity log error:", err);
+        res.status(500).json({ message: "Failed to log activity" });
     }
 });
 
