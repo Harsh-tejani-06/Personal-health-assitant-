@@ -35,19 +35,6 @@ const UserIcon = () => (
   </svg>
 );
 
-const ChevronIcon = ({ open }) => (
-  <svg
-    width="18" height="18" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={2}
-    style={{
-      transform: open ? "rotate(180deg)" : "rotate(0deg)",
-      transition: "transform 0.3s ease"
-    }}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-  </svg>
-);
-
 // -------- Helper: format date --------
 function formatDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
@@ -82,17 +69,12 @@ function getTodayDate() {
 // -------- Typing indicator dots --------
 function TypingDots() {
   return (
-    <div style={{ display: "flex", gap: 4, padding: "4px 0" }}>
+    <div className="flex gap-1 py-1">
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          style={{
-            width: 7,
-            height: 7,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #818cf8, #a78bfa)",
-            animation: `typingBounce 1.2s ease-in-out ${i * 0.15}s infinite`,
-          }}
+          className="w-2 h-2 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 animate-bounce"
+          style={{ animationDelay: `${i * 150}ms` }}
         />
       ))}
     </div>
@@ -112,29 +94,16 @@ export default function Chatbot() {
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // -------- Load dates on mount --------
-  useEffect(() => {
-    loadDates();
-  }, []);
-
-  // -------- Load messages when date changes --------
-  useEffect(() => {
-    loadMessages(selectedDate);
-  }, [selectedDate]);
-
-  // -------- Auto-scroll --------
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  useEffect(() => { loadDates(); }, []);
+  useEffect(() => { loadMessages(selectedDate); }, [selectedDate]);
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   async function loadDates() {
     try {
       const data = await getChatDates();
       const allDates = data.dates || [];
       const today = getTodayDate();
-      if (!allDates.includes(today)) {
-        allDates.unshift(today);
-      }
+      if (!allDates.includes(today)) allDates.unshift(today);
       setDates(allDates);
     } catch (err) {
       console.error("Failed to load dates:", err);
@@ -154,7 +123,6 @@ export default function Chatbot() {
     }
   }
 
-  // -------- Send message with streaming --------
   async function handleSend() {
     if (!input.trim() || isStreaming) return;
 
@@ -162,7 +130,6 @@ export default function Chatbot() {
     setInput("");
     setSelectedDate(getTodayDate());
 
-    // Add user message locally
     setMessages((prev) => [
       ...prev,
       { role: "user", content: userMsg, createdAt: new Date().toISOString() },
@@ -170,7 +137,6 @@ export default function Chatbot() {
 
     setIsStreaming(true);
 
-    // Add empty assistant message placeholder
     setMessages((prev) => [
       ...prev,
       { role: "assistant", content: "", createdAt: new Date().toISOString(), streaming: true },
@@ -262,507 +228,193 @@ export default function Chatbot() {
   const isToday = selectedDate === getTodayDate();
 
   return (
-    <>
-      {/* Inline keyframe styles */}
-      <style>{`
-        @keyframes typingBounce {
-          0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
-          30% { transform: translateY(-8px); opacity: 1; }
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(129,140,248,0.15); }
-          50% { box-shadow: 0 0 35px rgba(129,140,248,0.3); }
-        }
-        .chat-bubble-user {
-          animation: fadeInUp 0.3s ease-out;
-        }
-        .chat-bubble-ai {
-          animation: fadeInUp 0.4s ease-out;
-        }
-        .date-chip {
-          transition: all 0.2s ease;
-        }
-        .date-chip:hover {
-          transform: translateX(4px);
-        }
-        .send-btn:hover:not(:disabled) {
-          transform: scale(1.05);
-          box-shadow: 0 8px 25px rgba(129,140,248,0.4);
-        }
-        .send-btn:active:not(:disabled) {
-          transform: scale(0.97);
-        }
-        .chat-input-area:focus-within {
-          border-color: rgba(129,140,248,0.5);
-          box-shadow: 0 0 0 3px rgba(129,140,248,0.1);
-        }
-      `}</style>
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-[900px] mx-auto font-['Inter',sans-serif]">
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "calc(100vh - 4rem)",
-          maxWidth: 900,
-          margin: "0 auto",
-          fontFamily: "'Inter', 'Segoe UI', sans-serif",
-        }}
-      >
-        {/* ============ HEADER ============ */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "16px 20px",
-            background: "linear-gradient(135deg, rgba(255,255,255,0.95), rgba(241,245,249,0.95))",
-            backdropFilter: "blur(20px)",
-            borderRadius: 16,
-            marginBottom: 12,
-            border: "1px solid rgba(148,163,184,0.15)",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
-          }}
+      {/* ============ HEADER ============ */}
+      <div className="flex items-center justify-between px-5 py-4 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl mb-3 border border-slate-200/50 dark:border-slate-700/50 shadow-sm transition-colors">
+        <div className="flex items-center gap-3">
+          <div className="w-[42px] h-[42px] rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+            <BotIcon />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight">
+              Health Assistant
+            </h2>
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+              Personalized health advice • Powered by AI
+            </p>
+          </div>
+        </div>
+
+        {/* Date toggle */}
+        <button
+          onClick={() => setShowDates(!showDates)}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${showDates
+              ? 'bg-gradient-to-br from-indigo-400 to-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+              : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-indigo-300 shadow-sm'
+            }`}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 12,
-                background: "linear-gradient(135deg, #818cf8, #6366f1)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                boxShadow: "0 4px 15px rgba(99,102,241,0.3)",
-              }}
-            >
+          <CalendarIcon />
+          {formatDate(selectedDate)}
+          <svg
+            width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth={2}
+            className={`transition-transform duration-300 ${showDates ? 'rotate-180' : 'rotate-0'}`}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* ============ DATE PICKER DROPDOWN ============ */}
+      {showDates && (
+        <div className="bg-white/97 dark:bg-slate-800/97 backdrop-blur-xl rounded-2xl p-3 mb-3 border border-slate-200/50 dark:border-slate-700/50 shadow-xl max-h-[200px] overflow-y-auto animate-fadeIn transition-colors">
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">
+            Chat History
+          </p>
+          <div className="flex flex-col gap-1">
+            {dates.map((d) => (
+              <button
+                key={d}
+                onClick={() => {
+                  setSelectedDate(d);
+                  setShowDates(false);
+                }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all hover:translate-x-1 ${d === selectedDate
+                    ? 'bg-gradient-to-br from-indigo-400 to-indigo-600 text-white'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  }`}
+              >
+                <CalendarIcon />
+                {formatDate(d)}
+                <span className="ml-auto text-xs opacity-60">{d}</span>
+              </button>
+            ))}
+            {dates.length === 0 && (
+              <p className="py-3 text-center text-slate-400 dark:text-slate-500 text-sm">
+                No chat history yet
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ============ CHAT MESSAGES ============ */}
+      <div className="flex-1 overflow-y-auto px-1 py-4 flex flex-col gap-4">
+        {loading ? (
+          <div className="flex items-center justify-center flex-1 text-slate-400 dark:text-slate-500 text-sm">
+            <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mr-3" />
+            Loading messages...
+          </div>
+        ) : messages.length === 0 ? (
+          /* -------- Empty state -------- */
+          <div className="flex flex-col items-center justify-center flex-1 gap-4 py-10">
+            <div className="w-[72px] h-[72px] rounded-2xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-500/25 animate-pulse">
               <BotIcon />
             </div>
-            <div>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: "#1e293b",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                Health Assistant
-              </h2>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 12,
-                  color: "#94a3b8",
-                  fontWeight: 500,
-                }}
-              >
-                Personalized health advice • Powered by AI
-              </p>
-            </div>
-          </div>
-
-          {/* Date toggle */}
-          <button
-            onClick={() => setShowDates(!showDates)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 14px",
-              borderRadius: 10,
-              border: "1px solid rgba(148,163,184,0.2)",
-              background: showDates
-                ? "linear-gradient(135deg, #818cf8, #6366f1)"
-                : "white",
-              color: showDates ? "white" : "#475569",
-              cursor: "pointer",
-              fontSize: 13,
-              fontWeight: 600,
-              transition: "all 0.3s ease",
-              boxShadow: showDates
-                ? "0 4px 15px rgba(99,102,241,0.3)"
-                : "0 2px 8px rgba(0,0,0,0.04)",
-            }}
-          >
-            <CalendarIcon />
-            {formatDate(selectedDate)}
-            <ChevronIcon open={showDates} />
-          </button>
-        </div>
-
-        {/* ============ DATE PICKER DROPDOWN ============ */}
-        {showDates && (
-          <div
-            style={{
-              background: "rgba(255,255,255,0.97)",
-              backdropFilter: "blur(20px)",
-              borderRadius: 14,
-              padding: 12,
-              marginBottom: 12,
-              border: "1px solid rgba(148,163,184,0.12)",
-              boxShadow: "0 8px 30px rgba(0,0,0,0.06)",
-              maxHeight: 200,
-              overflowY: "auto",
-              animation: "fadeInUp 0.25s ease-out",
-            }}
-          >
-            <p
-              style={{
-                margin: "0 0 8px 4px",
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#94a3b8",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-              }}
-            >
-              Chat History
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+              {isToday ? "Start a Conversation" : `No chats on ${formatDate(selectedDate)}`}
+            </h3>
+            <p className="text-sm text-slate-400 dark:text-slate-500 text-center max-w-[360px] leading-relaxed">
+              {isToday
+                ? "Ask me anything about your health — nutrition, exercise, skin care, sleep tips, and more!"
+                : "Select today's date to start a new conversation."}
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {dates.map((d) => (
-                <button
-                  key={d}
-                  className="date-chip"
-                  onClick={() => {
-                    setSelectedDate(d);
-                    setShowDates(false);
-                  }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    border: "none",
-                    background:
-                      d === selectedDate
-                        ? "linear-gradient(135deg, #818cf8, #6366f1)"
-                        : "transparent",
-                    color: d === selectedDate ? "white" : "#475569",
-                    cursor: "pointer",
-                    fontSize: 13,
-                    fontWeight: d === selectedDate ? 600 : 500,
-                    textAlign: "left",
-                  }}
-                >
-                  <CalendarIcon />
-                  {formatDate(d)}
-                  <span
-                    style={{
-                      marginLeft: "auto",
-                      fontSize: 11,
-                      opacity: 0.6,
+            {isToday && (
+              <div className="flex flex-wrap gap-2 justify-center mt-2">
+                {[
+                  "💪 Workout for my goals",
+                  "🥗 Diet suggestions",
+                  "😴 Sleep improvement tips",
+                  "✨ Skin care routine",
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => {
+                      setInput(suggestion);
+                      inputRef.current?.focus();
                     }}
+                    className="px-3.5 py-2 rounded-full border border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-gradient-to-br hover:from-indigo-400 hover:to-indigo-600 hover:text-white hover:border-transparent transition-all shadow-sm"
                   >
-                    {d}
-                  </span>
-                </button>
-              ))}
-              {dates.length === 0 && (
-                <p style={{ padding: 12, color: "#94a3b8", fontSize: 13, textAlign: "center" }}>
-                  No chat history yet
-                </p>
-              )}
-            </div>
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+        ) : (
+          /* -------- Messages -------- */
+          messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`flex gap-2.5 items-start animate-fadeIn ${msg.role === "user" ? "flex-row-reverse pl-10" : "flex-row pr-10"
+                }`}
+            >
+              {/* Avatar */}
+              <div
+                className={`w-[34px] h-[34px] min-w-[34px] rounded-xl flex items-center justify-center text-white shadow-md ${msg.role === "user"
+                    ? "bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/25"
+                    : "bg-gradient-to-br from-indigo-400 to-indigo-600 shadow-indigo-500/25"
+                  }`}
+              >
+                {msg.role === "user" ? <UserIcon /> : <BotIcon />}
+              </div>
+
+              {/* Bubble */}
+              <div
+                className={`px-4 py-3 text-sm leading-relaxed max-w-full break-words whitespace-pre-wrap ${msg.role === "user"
+                    ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-[14px] rounded-br-[4px] shadow-md shadow-blue-500/20"
+                    : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-[14px] rounded-bl-[4px] border border-slate-200/50 dark:border-slate-700/50 shadow-md shadow-black/[0.04] dark:shadow-black/20"
+                  }`}
+              >
+                {msg.content || (msg.streaming ? <TypingDots /> : "")}
+
+                {/* Time */}
+                {msg.createdAt && (
+                  <div
+                    className={`mt-1.5 text-[10px] opacity-50 ${msg.role === "user" ? "text-right" : "text-left"
+                      }`}
+                  >
+                    {formatTime(msg.createdAt)}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
         )}
-
-        {/* ============ CHAT MESSAGES ============ */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: "16px 4px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 16,
-          }}
-        >
-          {loading ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flex: 1,
-                color: "#94a3b8",
-                fontSize: 14,
-              }}
-            >
-              Loading messages...
-            </div>
-          ) : messages.length === 0 ? (
-            /* -------- Empty state -------- */
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                flex: 1,
-                gap: 16,
-                padding: 40,
-              }}
-            >
-              <div
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 20,
-                  background: "linear-gradient(135deg, #818cf8, #6366f1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  boxShadow: "0 8px 30px rgba(99,102,241,0.25)",
-                  animation: "pulse-glow 3s ease-in-out infinite",
-                }}
-              >
-                <BotIcon />
-              </div>
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color: "#1e293b",
-                }}
-              >
-                {isToday ? "Start a Conversation" : `No chats on ${formatDate(selectedDate)}`}
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 14,
-                  color: "#94a3b8",
-                  textAlign: "center",
-                  maxWidth: 360,
-                  lineHeight: 1.5,
-                }}
-              >
-                {isToday
-                  ? "Ask me anything about your health — nutrition, exercise, skin care, sleep tips, and more!"
-                  : "Select today's date to start a new conversation."}
-              </p>
-              {isToday && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 8,
-                    justifyContent: "center",
-                    marginTop: 8,
-                  }}
-                >
-                  {[
-                    "💪 Workout for my goals",
-                    "🥗 Diet suggestions",
-                    "😴 Sleep improvement tips",
-                    "✨ Skin care routine",
-                  ].map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      onClick={() => {
-                        setInput(suggestion);
-                        inputRef.current?.focus();
-                      }}
-                      style={{
-                        padding: "8px 14px",
-                        borderRadius: 20,
-                        border: "1px solid rgba(148,163,184,0.2)",
-                        background: "rgba(255,255,255,0.8)",
-                        color: "#475569",
-                        cursor: "pointer",
-                        fontSize: 12,
-                        fontWeight: 500,
-                        transition: "all 0.2s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = "linear-gradient(135deg, #818cf8, #6366f1)";
-                        e.target.style.color = "white";
-                        e.target.style.borderColor = "transparent";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = "rgba(255,255,255,0.8)";
-                        e.target.style.color = "#475569";
-                        e.target.style.borderColor = "rgba(148,163,184,0.2)";
-                      }}
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            /* -------- Messages -------- */
-            messages.map((msg, i) => (
-              <div
-                key={i}
-                className={msg.role === "user" ? "chat-bubble-user" : "chat-bubble-ai"}
-                style={{
-                  display: "flex",
-                  flexDirection: msg.role === "user" ? "row-reverse" : "row",
-                  gap: 10,
-                  alignItems: "flex-start",
-                  paddingLeft: msg.role === "user" ? 40 : 0,
-                  paddingRight: msg.role === "user" ? 0 : 40,
-                }}
-              >
-                {/* Avatar */}
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    minWidth: 34,
-                    borderRadius: 10,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background:
-                      msg.role === "user"
-                        ? "linear-gradient(135deg, #3b82f6, #2563eb)"
-                        : "linear-gradient(135deg, #818cf8, #6366f1)",
-                    color: "white",
-                    boxShadow:
-                      msg.role === "user"
-                        ? "0 3px 12px rgba(37,99,235,0.25)"
-                        : "0 3px 12px rgba(99,102,241,0.25)",
-                  }}
-                >
-                  {msg.role === "user" ? <UserIcon /> : <BotIcon />}
-                </div>
-
-                {/* Bubble */}
-                <div
-                  style={{
-                    padding: "12px 16px",
-                    borderRadius:
-                      msg.role === "user"
-                        ? "14px 14px 4px 14px"
-                        : "14px 14px 14px 4px",
-                    background:
-                      msg.role === "user"
-                        ? "linear-gradient(135deg, #3b82f6, #2563eb)"
-                        : "rgba(255,255,255,0.95)",
-                    color: msg.role === "user" ? "white" : "#334155",
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    maxWidth: "100%",
-                    wordBreak: "break-word",
-                    border:
-                      msg.role === "user"
-                        ? "none"
-                        : "1px solid rgba(148,163,184,0.12)",
-                    boxShadow:
-                      msg.role === "user"
-                        ? "0 4px 15px rgba(37,99,235,0.2)"
-                        : "0 4px 15px rgba(0,0,0,0.04)",
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {msg.content || (msg.streaming ? <TypingDots /> : "")}
-
-                  {/* Time */}
-                  {msg.createdAt && (
-                    <div
-                      style={{
-                        marginTop: 6,
-                        fontSize: 10,
-                        opacity: 0.5,
-                        textAlign: msg.role === "user" ? "right" : "left",
-                      }}
-                    >
-                      {formatTime(msg.createdAt)}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-          <div ref={chatEndRef} />
-        </div>
-
-        {/* ============ INPUT BAR ============ */}
-        <div
-          className="chat-input-area"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "12px 16px",
-            background: "rgba(255,255,255,0.95)",
-            backdropFilter: "blur(20px)",
-            borderRadius: 16,
-            border: "1px solid rgba(148,163,184,0.15)",
-            boxShadow: "0 -4px 20px rgba(0,0,0,0.03)",
-            transition: "all 0.3s ease",
-            marginTop: 8,
-            opacity: isToday ? 1 : 0.5,
-            pointerEvents: isToday ? "auto" : "none",
-          }}
-        >
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              isToday
-                ? "Ask about your health..."
-                : "Switch to today to send messages"
-            }
-            disabled={isStreaming || !isToday}
-            style={{
-              flex: 1,
-              border: "none",
-              outline: "none",
-              fontSize: 14,
-              color: "#1e293b",
-              background: "transparent",
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-            }}
-          />
-          <button
-            className="send-btn"
-            onClick={handleSend}
-            disabled={!input.trim() || isStreaming || !isToday}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              border: "none",
-              background:
-                input.trim() && !isStreaming
-                  ? "linear-gradient(135deg, #818cf8, #6366f1)"
-                  : "rgba(148,163,184,0.15)",
-              color: input.trim() && !isStreaming ? "white" : "#94a3b8",
-              cursor:
-                input.trim() && !isStreaming ? "pointer" : "not-allowed",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.3s ease",
-              flexShrink: 0,
-            }}
-          >
-            {isStreaming ? <TypingDots /> : <SendIcon />}
-          </button>
-        </div>
+        <div ref={chatEndRef} />
       </div>
-    </>
+
+      {/* ============ INPUT BAR ============ */}
+      <div
+        className={`flex items-center gap-2.5 px-4 py-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm mt-2 transition-all focus-within:border-indigo-400/50 focus-within:ring-2 focus-within:ring-indigo-400/10 ${!isToday ? "opacity-50 pointer-events-none" : ""
+          }`}
+      >
+        <input
+          ref={inputRef}
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={
+            isToday
+              ? "Ask about your health..."
+              : "Switch to today to send messages"
+          }
+          disabled={isStreaming || !isToday}
+          className="flex-1 border-none outline-none text-sm text-slate-800 dark:text-slate-100 bg-transparent font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:cursor-not-allowed"
+        />
+        <button
+          onClick={handleSend}
+          disabled={!input.trim() || isStreaming || !isToday}
+          className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${input.trim() && !isStreaming
+              ? "bg-gradient-to-br from-indigo-400 to-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:scale-105 active:scale-95 cursor-pointer"
+              : "bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+            }`}
+        >
+          {isStreaming ? <TypingDots /> : <SendIcon />}
+        </button>
+      </div>
+    </div>
   );
 }

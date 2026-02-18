@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [greeting, setGreeting] = useState("Good morning");
   const [currentDate, setCurrentDate] = useState("");
   const [currentTime, setCurrentTime] = useState("");
+  const [waterIntake, setWaterIntake] = useState(2.5);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -40,14 +41,71 @@ export default function Dashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  const user = {
-    fullname: "Harsh Tejani(Leader)",
-    height: 179,
-    weight: 70,
-    goal: "Maintain Fitness",
-    streak: 12,
-    avatar: "/user.png"
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Fetch User Profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/profile", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          setUser({
+            fullname: data.fullname || "User",
+            height: data.healthProfile?.height || 0,
+            weight: data.healthProfile?.weight || 0,
+            goal: data.healthProfile?.primaryGoal?.replace("_", " ") || "Stay Fit",
+            streak: 12,
+            avatar: data.avatar ? `http://localhost:5000${data.avatar}` : "/user.png"
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/upload-avatar", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setUser((prev) => ({
+          ...prev,
+          avatar: `http://localhost:5000${data.avatar}`,
+        }));
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+    }
   };
+
+  if (loading) return <div className="text-center p-10 dark:text-white">Loading Dashboard...</div>;
+  if (!user) return <div className="text-center p-10 dark:text-white">User not found</div>;
 
   const bmi = (user.weight / ((user.height / 100) ** 2)).toFixed(1);
   const bmiStatus = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese";
@@ -70,10 +128,22 @@ export default function Dashboard() {
     Water: "2.5L"
   };
 
+  const monthlyHabits = {
+    "2026-02-01": { exercise: 1, diet: 1, skincare: 1 },
+    "2026-02-02": { exercise: 1, diet: 0, skincare: 1 },
+    "2026-02-03": { exercise: 0, diet: 0, skincare: 0 },
+    "2026-02-04": { exercise: 1, diet: 1, skincare: 1 },
+    "2026-02-05": { exercise: 1, diet: 1, skincare: 0 },
+    "2026-02-06": { exercise: 0, diet: 0, skincare: 0 },
+    "2026-02-07": { exercise: 1, diet: 1, skincare: 1 }
+  };
+
   const weeklyProgress = [
     { name: "Completed", value: 75, color: "#b89cff" },
     { name: "Remaining", value: 25, color: "#e2e8f0" }
   ];
+
+  const longestStreak = calculateLongestStreak(monthlyHabits);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-transparent text-slate-800 dark:text-slate-200 p-4 md:p-6 lg:p-8 relative overflow-hidden transition-colors duration-300">
@@ -107,7 +177,7 @@ export default function Dashboard() {
           <div className="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 md:p-8 transition-colors">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] p-1">
+                <div className="w-26 h-26 rounded-full bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] p-1 relative group cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowPreview(true)}>
                   <img
                     src={user.avatar}
                     alt="Profile"
@@ -198,17 +268,63 @@ export default function Dashboard() {
                 <span className="w-2 h-2 rounded-full bg-[#10b981]"></span>
                 Weekly Habit Tracking
               </h3>
-              <div className="flex gap-4">
-                <LightLegendItem color="#b89cff" label="Exercise" />
-                <LightLegendItem color="#10b981" label="Diet" />
-                <LightLegendItem color="#38bdf8" label="Skin Care" />
+            </div>
+
+            <div className="w-full overflow-x-auto">
+              {/* Header Row */}
+              <div className="grid grid-cols-8 gap-2 mb-2 min-w-[500px]">
+                <div className="col-span-1"></div>
+                {habitData.map((d, i) => (
+                  <div key={i} className="text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    {d.day}
+                  </div>
+                ))}
               </div>
+
+              {/* Habit Rows */}
+              {['Exercise', 'Diet', 'SkinCare', 'Water'].map((habit) => (
+                <div key={habit} className="grid grid-cols-8 gap-2 mb-3 items-center min-w-[500px]">
+                  <div className="col-span-1 text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {habit}
+                  </div>
+                  {habitData.map((dayData, index) => {
+                    const key = habit.toLowerCase();
+                    let isDone = false;
+                    if (key === 'water') {
+                      isDone = dayData[key] >= 2.0;
+                    } else {
+                      isDone = dayData[key] === 1;
+                    }
+                    return (
+                      <div key={index} className="flex justify-center">
+                        <div
+                          className={`
+                            w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300
+                            ${isDone
+                              ? 'bg-gradient-to-br from-[#4ade80] to-[#22c55e] shadow-md shadow-green-200 dark:shadow-green-900/30 scale-95'
+                              : 'bg-slate-100 dark:bg-slate-700 scale-90 opacity-70'}
+                          `}
+                          title={`${dayData.day}: ${habit} ${isDone ? 'Completed' : 'Missed'}`}
+                        >
+                          {isDone ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-white">
+                              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <div className="w-2 h-2 rounded-full bg-white dark:bg-slate-500"></div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
 
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={habitData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} className="[.dark_&]:stroke-slate-700 stroke-slate-100" />
+                  <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey="day"
                     stroke="#94a3b8"
@@ -310,6 +426,24 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Water Tracker & Streak Calendar */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <WaterTracker
+            current={waterIntake}
+            goal={3}
+            onAdd={() => setWaterIntake(prev => Math.min(prev + 0.25, 4))}
+            onReduce={() => setWaterIntake(prev => Math.max(prev - 0.25, 0))}
+          />
+
+          <div className="lg:col-span-2 h-full">
+            <StreakCalendar
+              habits={monthlyHabits}
+              currentStreak={user.streak}
+              longestStreak={longestStreak}
+            />
+          </div>
+        </div>
+
         {/* Health Tip */}
         <div className="bg-gradient-to-r from-[#b89cff]/10 via-[#f0f9ff] to-[#b89cff]/10 dark:from-[#b89cff]/20 dark:via-slate-800/50 dark:to-[#b89cff]/20 rounded-2xl p-6 border border-[#b89cff]/20">
           <div className="flex items-start gap-4">
@@ -329,11 +463,50 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Profile Preview Modal */}
+      {showPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowPreview(false)}>
+          <div className="relative bg-white dark:bg-slate-800 rounded-3xl p-2 max-w-sm w-full shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowPreview(false)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 bg-black/20 hover:bg-black/40 rounded-full text-white flex items-center justify-center transition-colors"
+            >
+              ✕
+            </button>
+
+            <div className="relative aspect-square w-full rounded-2xl overflow-hidden">
+              <img
+                src={user.avatar}
+                alt="Profile Preview"
+                className="w-full h-full object-cover"
+              />
+
+              {/* Edit Button */}
+              <label className="absolute bottom-4 right-4 w-12 h-12 bg-[#b89cff] hover:bg-[#a78bfa] text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-transform hover:scale-110 active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                </svg>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    handleImageUpload(e);
+                    setShowPreview(false);
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// Light Theme Components (matching sidebar)
+// ==================== Sub-Components ====================
+
 function LightStatCard({ title, value, subtitle, icon, highlight = false, color }) {
   return (
     <div className={`p-4 rounded-2xl border transition-all duration-300 ${highlight
@@ -419,4 +592,226 @@ function LightQuickStatCard({ title, value, subtitle, icon, color, progress }) {
       </div>
     </div>
   );
+}
+
+function WaterTracker({ current, goal, onAdd, onReduce }) {
+  const remaining = Math.max(goal - current, 0);
+  const data = [
+    { name: "Consumed", value: current, color: "#3b82f6" },
+    { name: "Remaining", value: remaining, color: "#e2e8f0" },
+  ];
+
+  const percent = Math.min((current / goal) * 100, 100);
+
+  return (
+    <div className="bg-white dark:bg-slate-800/80 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 flex flex-col items-center justify-center relative transition-colors">
+      <h3 className="font-bold mb-4 self-start w-full flex justify-between items-center text-slate-800 dark:text-white">
+        <span>💧 Water Tracker</span>
+        <span className="text-xs font-normal text-slate-400 dark:text-slate-500">Goal: {goal}L</span>
+      </h3>
+
+      <div className="relative w-48 h-48">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={80}
+              startAngle={90}
+              endAngle={-270}
+              dataKey="value"
+              stroke="none"
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+
+        {/* Center Text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="text-3xl font-bold text-slate-800 dark:text-white">{current}L</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">{percent.toFixed(0)}%</span>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex items-center gap-4 mt-6 w-full justify-center">
+        <button
+          onClick={onReduce}
+          className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center transition-all text-xl font-bold pb-1"
+          title="Reduce by 0.25L"
+        >
+          -
+        </button>
+        <button
+          onClick={onAdd}
+          className="w-10 h-10 rounded-full bg-blue-500 text-white shadow-lg shadow-blue-200 dark:shadow-blue-900/30 hover:bg-blue-600 hover:scale-105 active:scale-95 flex items-center justify-center transition-all text-xl font-bold pb-1"
+          title="Add 0.25L"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ================= STREAK CALENDAR ================= */
+
+function StreakCalendar({ habits, currentStreak, longestStreak }) {
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 1, 1));
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const monthName = currentDate.toLocaleString('default', { month: 'long' });
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+
+  const days = [];
+  for (let i = 0; i < firstDayOfMonth; i++) {
+    days.push(null);
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push(i);
+  }
+
+  const getColor = (status) => {
+    switch (status) {
+      case "complete": return "bg-green-500";
+      case "partial": return "bg-yellow-400";
+      case "missed": return "bg-red-500";
+      default: return "bg-slate-100 dark:bg-slate-700";
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-4 h-full flex flex-col transition-colors">
+      {/* Header with Title and Streak Stats */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-2 mb-2">
+        <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+          <span className="text-xl">📅</span> Habit Calendar
+        </h3>
+
+        <div className="flex gap-2">
+          <div className="bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded-lg border border-purple-100 dark:border-purple-800 flex flex-col items-center min-w-[100px]">
+            <span className="text-[14px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider">Longest Streak</span>
+            <div className="flex items-center gap-1">
+              <span className="text-purple-500 text-xs">🏆</span>
+              <span className="text-base font-bold text-slate-700 dark:text-white">{longestStreak}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Month Navigation */}
+      <div className="flex items-center justify-center gap-4 mb-3">
+        <button
+          onClick={prevMonth}
+          className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+          title="Previous Month"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <span className="text-base font-bold text-slate-700 dark:text-white min-w-[120px] text-center">
+          {monthName} {year}
+        </span>
+        <button
+          onClick={nextMonth}
+          className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+          title="Next Month"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Weekday Headers */}
+      <div className="grid grid-cols-7 gap-1 mb-1 text-center">
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+          <div key={`${d}-${i}`} className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{d}</div>
+        ))}
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-1 flex-2">
+        {days.map((day, i) => {
+          if (!day) return <div key={`empty-${i}`} className="h-8 w-8" />;
+
+          const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          const status = getHabitStatus(habits[dateStr]);
+          const isToday = day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear();
+
+          return (
+            <div
+              key={day}
+              className={`
+                 h-8 w-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-300 mx-auto
+                 ${getColor(status)} 
+                 ${status === 'none' ? 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-600' : 'text-white shadow-sm hover:scale-110 hover:shadow-md'}
+                 ${isToday ? 'ring-2 ring-offset-1 ring-[#b89cff] dark:ring-offset-slate-800' : ''}
+               `}
+              title={status === 'none' ? 'No Data' : `Status: ${status}`}
+            >
+              {day}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer Legend */}
+      <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 justify-center border-t border-slate-50 dark:border-slate-700 pt-2">
+        <Legend color="bg-green-500" label="Done" />
+        <Legend color="bg-yellow-400" label="Partial" />
+        <Legend color="bg-red-500" label="Missed" />
+        <Legend color="bg-slate-100 dark:bg-slate-700" label="Empty" />
+      </div>
+    </div>
+  );
+}
+
+function Legend({ color, label }) {
+  return (
+    <div className="flex items-center gap-1">
+      <div className={`w-3 h-3 rounded ${color}`} />
+      <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
+    </div>
+  );
+}
+
+// Determine habit completion status for a date
+function getHabitStatus(habit) {
+  if (!habit) return "none";
+  const total = habit.exercise + habit.diet + habit.skincare;
+  if (total === 3) return "complete";
+  if (total === 0) return "missed";
+  return "partial";
+}
+
+// Calculate longest streak from habits data
+function calculateLongestStreak(habits) {
+  const dates = Object.keys(habits).sort();
+  let longest = 0;
+  let current = 0;
+
+  dates.forEach(date => {
+    const status = getHabitStatus(habits[date]);
+    if (status === "complete") {
+      current++;
+      longest = Math.max(longest, current);
+    } else {
+      current = 0;
+    }
+  });
+
+  return longest;
 }
