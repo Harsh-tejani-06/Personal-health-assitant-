@@ -32,7 +32,7 @@ export default function GetStarted() {
               <span className="text-sm font-medium text-[#0891b2]">AI-Powered Health Companion</span>
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-800">
-              Personal <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#06b6d4] to-[#10b981]">Health Assistant</span>
+               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#06b6d4] to-[#10b981]">Personal Health Assistant</span>
             </h1>
             <p className="mt-4 text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
               Your intelligent companion for a healthier, happier life
@@ -53,7 +53,7 @@ export default function GetStarted() {
                   </div>
                   <div>
                     <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-2">
-                      Small habits. <span className="text-[#0891b2]">Smarter health</span>
+                     <span className="text-[#0891b2]"> Small habits. Smarter health</span>
                     </h2>
                     <p className="text-slate-600 text-sm leading-relaxed">
                       Personalized diet plans, intelligent workout routines, and AI-powered wellness guidance designed specifically for your daily lifestyle and goals.
