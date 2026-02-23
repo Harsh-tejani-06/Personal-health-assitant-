@@ -1,6 +1,7 @@
 import {
   PieChart,
   Pie,
+  Cell,
   ResponsiveContainer
 } from "recharts";
 import { useState, useEffect } from "react";
@@ -735,7 +736,7 @@ function WaterTracker({ current, goal, onAdd, onReduce }) {
 
 /* ================= STREAK CALENDAR ================= */
 
-function StreakCalendar({ habits, currentStreak, longestStreak }) {
+function StreakCalendar({ habits, longestStreak }) {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 1, 1));
 
   const year = currentDate.getFullYear();

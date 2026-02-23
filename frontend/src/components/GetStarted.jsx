@@ -6,7 +6,7 @@ export default function GetStarted() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f0f9ff] via-[#e0f2fe] to-[#f0fdf4] flex items-center justify-center overflow-hidden relative p-4 md:p-8">
-      
+
       {/* Animated background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-10 left-10 w-64 h-64 bg-[#06b6d4]/10 rounded-full blur-3xl animate-pulse" />
@@ -20,7 +20,7 @@ export default function GetStarted() {
 
       {/* Main container */}
       <div className="relative w-full max-w-6xl bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-fade-up">
-        
+
         {/* Header accent bar */}
         <div className="h-2 bg-gradient-to-r from-[#06b6d4] via-[#0ea5e9] to-[#10b981]" />
 
@@ -32,7 +32,7 @@ export default function GetStarted() {
               <span className="text-sm font-medium text-[#0891b2]">AI-Powered Health Companion</span>
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-800">
-               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#06b6d4] to-[#10b981]">Personal Health Assistant</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#06b6d4] to-[#10b981]">Personal Health Assistant</span>
             </h1>
             <p className="mt-4 text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
               Your intelligent companion for a healthier, happier life
@@ -41,10 +41,10 @@ export default function GetStarted() {
 
           {/* CONTENT */}
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-            
+
             {/* ================= LEFT SIDE ================= */}
             <div className="w-full lg:w-1/2 flex flex-col gap-6">
-              
+
               {/* Slogan Card */}
               <div className="bg-gradient-to-br from-[#f0f9ff] to-[#f0fdf4] rounded-2xl p-6 border border-[#06b6d4]/10">
                 <div className="flex items-start gap-4">
@@ -53,7 +53,7 @@ export default function GetStarted() {
                   </div>
                   <div>
                     <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-2">
-                     <span className="text-[#0891b2]"> Small habits. Smarter health</span>
+                      <span className="text-[#0891b2]"> Small habits. Smarter health</span>
                     </h2>
                     <p className="text-slate-600 text-sm leading-relaxed">
                       Personalized diet plans, intelligent workout routines, and AI-powered wellness guidance designed specifically for your daily lifestyle and goals.
@@ -192,7 +192,7 @@ function Card() {
       setCurrent((prev) => (prev + 1) % cards.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [cards.length]);
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
@@ -202,9 +202,8 @@ function Card() {
           <button
             key={index}
             onClick={() => setCurrent(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              index === current ? "w-6 bg-[#06b6d4]" : "bg-slate-300 hover:bg-slate-400"
-            }`}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${index === current ? "w-6 bg-[#06b6d4]" : "bg-slate-300 hover:bg-slate-400"
+              }`}
           />
         ))}
       </div>
@@ -291,21 +290,19 @@ function QuestionList() {
               text-left rounded-xl
               transition-all duration-300
               cursor-pointer group
-              ${activeIndex === index 
-                ? 'bg-[#06b6d4]/10 border-[#06b6d4]/30' 
+              ${activeIndex === index
+                ? 'bg-[#06b6d4]/10 border-[#06b6d4]/30'
                 : 'bg-white border-slate-200 hover:bg-slate-50 hover:border-[#06b6d4]/20'
               }
               border
             `}
           >
-            <span className={`font-medium text-sm md:text-base transition-colors ${
-              activeIndex === index ? 'text-[#0891b2]' : 'text-slate-700 group-hover:text-[#0891b2]'
-            }`}>
+            <span className={`font-medium text-sm md:text-base transition-colors ${activeIndex === index ? 'text-[#0891b2]' : 'text-slate-700 group-hover:text-[#0891b2]'
+              }`}>
               {item.q}
             </span>
-            <span className={`text-xl transition-transform duration-300 ${
-              activeIndex === index ? 'rotate-90 text-[#06b6d4]' : 'text-slate-400 group-hover:text-[#06b6d4]'
-            }`}>
+            <span className={`text-xl transition-transform duration-300 ${activeIndex === index ? 'rotate-90 text-[#06b6d4]' : 'text-slate-400 group-hover:text-[#06b6d4]'
+              }`}>
               ›
             </span>
           </button>
@@ -315,8 +312,8 @@ function QuestionList() {
       {/* FLOATING ANSWER MODAL */}
       {activeIndex !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => setActiveIndex(null)}
           />
           <div
@@ -331,7 +328,7 @@ function QuestionList() {
                 {questions[activeIndex].q}
               </h4>
             </div>
-            
+
             <div className="prose prose-slate max-w-none">
               <p className="text-slate-600 leading-relaxed text-sm md:text-base">
                 {questions[activeIndex].a}

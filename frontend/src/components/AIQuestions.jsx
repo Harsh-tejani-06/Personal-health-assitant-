@@ -2,6 +2,50 @@ import { useEffect, useState } from "react";
 import { getAIQuestions, saveAIAnswers } from "../services/profileService";
 import { useNavigate } from "react-router-dom";
 
+// Sample 10 AI questions (defined outside component for stable reference)
+const sampleQuestions = [
+    {
+        question: "How do you typically handle stress after a long workday?",
+        options: ["Meditation or deep breathing", "Physical exercise", "Watch TV or scroll social media", "Eat comfort food", "Talk to friends/family"]
+    },
+    {
+        question: "What's your biggest challenge in maintaining a healthy diet?",
+        options: ["Cravings for unhealthy food", "Lack of time to prepare meals", "Expensive healthy options", "Conflicting nutrition information", "Social eating situations"]
+    },
+    {
+        question: "How many hours do you spend sitting during a typical day?",
+        options: ["Less than 4 hours", "4-6 hours", "6-8 hours", "8-10 hours", "More than 10 hours"]
+    },
+    {
+        question: "What's your primary motivation for improving your health?",
+        options: ["Increase energy levels", "Improve physical appearance", "Prevent future health issues", "Boost mental clarity", "Keep up with family/activities"]
+    },
+    {
+        question: "How often do you experience midday energy crashes?",
+        options: ["Never", "Rarely (once a month)", "Sometimes (weekly)", "Often (2-3 times weekly)", "Daily"]
+    },
+    {
+        question: "Which health metric matters most to you right now?",
+        options: ["Weight/BMI", "Sleep quality", "Stress levels", "Fitness endurance", "Overall mood"]
+    },
+    {
+        question: "What's your preferred time for physical activity?",
+        options: ["Early morning (5-8 AM)", "Mid-morning (9-11 AM)", "Afternoon (12-4 PM)", "Evening (5-8 PM)", "Late night (9 PM+)", "No preference"]
+    },
+    {
+        question: "How would you describe your current relationship with food?",
+        options: ["Mindful and intentional", "Emotional/stress eating", "Convenient/fast-focused", "Restrictive/dieting", "Enjoyable but inconsistent"]
+    },
+    {
+        question: "What prevents you from getting adequate sleep most often?",
+        options: ["Work/study schedule", "Screen time/blue light", "Stress or anxiety", "Physical discomfort", "No issues, I sleep well"]
+    },
+    {
+        question: "How do you prefer to track your health progress?",
+        options: ["Mobile apps and wearables", "Journal or diary", "Regular check-ins with professionals", "Visual progress photos", "I don't track currently"]
+    }
+];
+
 export default function AIQuestions() {
     const navigate = useNavigate();
     const [answers, setAnswers] = useState({});
@@ -11,49 +55,7 @@ export default function AIQuestions() {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [progress, setProgress] = useState(0);
 
-    // Sample 10 AI questions (replace with API response)
-    const sampleQuestions = [
-        {
-            question: "How do you typically handle stress after a long workday?",
-            options: ["Meditation or deep breathing", "Physical exercise", "Watch TV or scroll social media", "Eat comfort food", "Talk to friends/family"]
-        },
-        {
-            question: "What's your biggest challenge in maintaining a healthy diet?",
-            options: ["Cravings for unhealthy food", "Lack of time to prepare meals", "Expensive healthy options", "Conflicting nutrition information", "Social eating situations"]
-        },
-        {
-            question: "How many hours do you spend sitting during a typical day?",
-            options: ["Less than 4 hours", "4-6 hours", "6-8 hours", "8-10 hours", "More than 10 hours"]
-        },
-        {
-            question: "What's your primary motivation for improving your health?",
-            options: ["Increase energy levels", "Improve physical appearance", "Prevent future health issues", "Boost mental clarity", "Keep up with family/activities"]
-        },
-        {
-            question: "How often do you experience midday energy crashes?",
-            options: ["Never", "Rarely (once a month)", "Sometimes (weekly)", "Often (2-3 times weekly)", "Daily"]
-        },
-        {
-            question: "Which health metric matters most to you right now?",
-            options: ["Weight/BMI", "Sleep quality", "Stress levels", "Fitness endurance", "Overall mood"]
-        },
-        {
-            question: "What's your preferred time for physical activity?",
-            options: ["Early morning (5-8 AM)", "Mid-morning (9-11 AM)", "Afternoon (12-4 PM)", "Evening (5-8 PM)", "Late night (9 PM+)", "No preference"]
-        },
-        {
-            question: "How would you describe your current relationship with food?",
-            options: ["Mindful and intentional", "Emotional/stress eating", "Convenient/fast-focused", "Restrictive/dieting", "Enjoyable but inconsistent"]
-        },
-        {
-            question: "What prevents you from getting adequate sleep most often?",
-            options: ["Work/study schedule", "Screen time/blue light", "Stress or anxiety", "Physical discomfort", "No issues, I sleep well"]
-        },
-        {
-            question: "How do you prefer to track your health progress?",
-            options: ["Mobile apps and wearables", "Journal or diary", "Regular check-ins with professionals", "Visual progress photos", "I don't track currently"]
-        }
-    ];
+
 
     const handleOptionChange = (questionIndex, option) => {
         setAnswers(prev => ({
@@ -87,7 +89,7 @@ export default function AIQuestions() {
 
             await saveAIAnswers(formattedAnswers);
             navigate("/dashboard");
-        } catch (err) {
+        } catch {
             alert("Failed to save answers. Please try again.");
             setIsSubmitting(false);
         }
@@ -222,7 +224,7 @@ export default function AIQuestions() {
                         {questions.map((q, index) => {
                             const isActive = index === currentQuestion;
                             const isAnswered = answers[index] !== undefined;
-                            const isPast = index < currentQuestion;
+
 
                             return (
                                 <div

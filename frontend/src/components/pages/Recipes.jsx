@@ -91,7 +91,7 @@ export default function RecipesStream() {
               parsedRecipe = parsed;
               displayText = null;
             }
-          } catch (e) {
+          } catch {
             displayText = m.text;
           }
         }
@@ -106,7 +106,7 @@ export default function RecipesStream() {
       });
 
       setChat(formatted);
-    } catch (err) {
+    } catch {
       console.log("Failed to load recipe history");
       setChat([]);
     } finally {
@@ -197,7 +197,7 @@ export default function RecipesStream() {
               if (data.error) {
                 streamError = data.error;
               }
-            } catch (e) { }
+            } catch { /* skip invalid JSON */ }
           }
         }
       }
@@ -214,7 +214,7 @@ export default function RecipesStream() {
         let recipeData = null;
         try {
           recipeData = JSON.parse(fullText);
-        } catch (e) { }
+        } catch { /* skip invalid JSON */ }
 
         setChat(prev => [...prev, {
           type: "ai",
@@ -225,7 +225,7 @@ export default function RecipesStream() {
         }]);
       }
 
-    } catch (err) {
+    } catch {
       setChat(prev => [...prev, {
         type: "ai",
         text: "Failed to generate recipe. Please try again.",
@@ -265,7 +265,7 @@ export default function RecipesStream() {
       });
       setDietMsg(`✅ Added to ${slot}!`);
       setTimeout(() => setDietMsg(null), 2500);
-    } catch (err) {
+    } catch {
       setDietMsg("❌ Failed to add to diet");
       setTimeout(() => setDietMsg(null), 2500);
     }
@@ -315,7 +315,7 @@ export default function RecipesStream() {
       setDietMsg("Removed from favourites");
       setTimeout(() => setDietMsg(null), 2500);
       await loadStarredRecipes();
-    } catch (err) {
+    } catch {
       setDietMsg("❌ Failed to remove");
       setTimeout(() => setDietMsg(null), 2500);
     }
@@ -462,7 +462,7 @@ export default function RecipesStream() {
                           setDietMsg("Removed from favourites");
                           setTimeout(() => setDietMsg(null), 2500);
                           await loadStarredRecipes();
-                        } catch (e) {
+                        } catch {
                           setDietMsg("❌ Failed to remove");
                           setTimeout(() => setDietMsg(null), 2500);
                         }
@@ -938,8 +938,8 @@ function StarredRecipeCard({ item, index = 0, onRemove, onAddToDiet }) {
             <button
               onClick={() => setExpanded(!expanded)}
               className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-all duration-300 ${expanded
-                  ? 'bg-[#b89cff]/10 text-[#b89cff] rotate-180'
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-400 hover:text-[#b89cff] hover:bg-[#b89cff]/10'
+                ? 'bg-[#b89cff]/10 text-[#b89cff] rotate-180'
+                : 'bg-slate-100 dark:bg-slate-700 text-slate-400 hover:text-[#b89cff] hover:bg-[#b89cff]/10'
                 }`}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

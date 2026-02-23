@@ -1,26 +1,19 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
-import API from "../../api/axios";
 
 export default function Sidebar({ open, setOpen }) {
   const location = useLocation();
-  const [progress, setProgress] = useState(67);
+  const progress = 67;
   const [currentTime, setCurrentTime] = useState("");
   const { theme, toggleTheme } = useTheme();
-  const [user, setUser] = useState({ fullname: "User", avatar: "" });
+
+  const logoutUser = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/auth";
+  };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await API.get("/profile");
-        setUser(res.data);
-      } catch (err) {
-        console.error("Failed to load sidebar profile:", err);
-      }
-    };
-    fetchProfile();
-
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString('en-US', {
         hour: '2-digit',
@@ -64,8 +57,8 @@ export default function Sidebar({ open, setOpen }) {
         {/* Logo Section */}
         <div className={`pt-20 pb-6 px-4 ${open ? 'px-6' : 'px-4'} border-b border-slate-100 dark:border-slate-800`}>
           <div className={`flex items-center gap-3 ${!open && 'justify-center'}`}>
-            <div className="w-10 h-10 bg-gradient-to-br from-[#06b6d4] to-[#10b981] rounded-xl flex items-center justify-center text-white text-xl shadow-lg">
-              🏥
+            <div className="w-13 h-13 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+              <img src="./public/logo.png" alt="HealthAI Logo" className="w-full h-full object-cover p-1" />
             </div>
             {open && (
               <div>
@@ -230,7 +223,7 @@ export default function Sidebar({ open, setOpen }) {
             {open && (
               <div className="flex-1 min-w-0">
                 {/* <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{user.displayName || user.fullname}</p> */}
-                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">Vansh Vanapariya</p>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">Vansh Vanapariya</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Pro Member</p>
               </div>
             )}

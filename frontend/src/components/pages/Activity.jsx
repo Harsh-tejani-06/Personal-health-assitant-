@@ -56,6 +56,7 @@ export default function Activity() {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     async function loadData() {
@@ -187,8 +188,8 @@ export default function Activity() {
                         <div
                             key={act.key}
                             className={`bg-white dark:bg-slate-800/80 rounded-2xl border shadow-sm overflow-hidden transition-all duration-300 ${isCompleted
-                                    ? `${act.border} ring-2 ring-offset-2 dark:ring-offset-slate-900 ${act.ringColor}`
-                                    : 'border-slate-200 dark:border-slate-700'
+                                ? `${act.border} ring-2 ring-offset-2 dark:ring-offset-slate-900 ${act.ringColor}`
+                                : 'border-slate-200 dark:border-slate-700'
                                 }`}
                         >
                             <div className={`bg-gradient-to-r ${act.color} p-5 text-white relative`}>
@@ -213,10 +214,10 @@ export default function Activity() {
                                     onClick={() => handleToggle(act.key)}
                                     disabled={isSaving}
                                     className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${isSaving
-                                            ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-wait'
-                                            : isCompleted
-                                                ? 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30'
-                                                : `bg-gradient-to-r ${act.color} text-white shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]`
+                                        ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-wait'
+                                        : isCompleted
+                                            ? 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30'
+                                            : `bg-gradient-to-r ${act.color} text-white shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]`
                                         }`}
                                 >
                                     {isSaving

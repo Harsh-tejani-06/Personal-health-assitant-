@@ -32,12 +32,7 @@ export default function Questionnaire() {
     3: ["monthlyFoodBudget", "sleepHours", "skinType", "waterIntakeLiters"]
   };
 
-  // All mandatory fields for final validation
-  const allMandatoryFields = [
-    ...mandatoryFields[1],
-    ...mandatoryFields[2],
-    ...mandatoryFields[3]
-  ];
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -45,7 +40,7 @@ export default function Questionnaire() {
       ...prev,
       [name]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
@@ -129,10 +124,10 @@ export default function Questionnaire() {
     try {
       // Save profile
       await saveHealthProfile(form);
-      
+
       // Generate AI questions - this might take time
       await generateAIQuestions(form);
-      
+
       navigate("/ai-questions");
     } catch (err) {
       console.log(err.response?.data || err.message);
@@ -191,29 +186,29 @@ export default function Questionnaire() {
           <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-4">
             Creating Your Personalized Plan
           </h2>
-          
+
           <p className="text-slate-600 mb-8 max-w-md mx-auto">
             Our AI is analyzing your profile to generate customized health recommendations. This may take a moment...
           </p>
 
           {/* Processing Steps */}
           <div className="space-y-4 max-w-md mx-auto">
-            <ProcessingStep 
-              icon="📝" 
-              text="Analyzing your profile" 
-              delay={0} 
+            <ProcessingStep
+              icon="📝"
+              text="Analyzing your profile"
+              delay={0}
               isActive={true}
             />
-            <ProcessingStep 
-              icon="🧬" 
-              text="Generating personalized questions" 
-              delay={500} 
+            <ProcessingStep
+              icon="🧬"
+              text="Generating personalized questions"
+              delay={500}
               isActive={true}
             />
-            <ProcessingStep 
-              icon="✨" 
-              text="Preparing your wellness plan" 
-              delay={1000} 
+            <ProcessingStep
+              icon="✨"
+              text="Preparing your wellness plan"
+              delay={1000}
               isActive={true}
             />
           </div>
@@ -240,7 +235,7 @@ export default function Questionnaire() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f0f9ff] via-[#e0f2fe] to-[#f0fdf4] flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
-      
+
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-96 h-96 bg-[#06b6d4]/10 rounded-full blur-3xl animate-pulse" />
@@ -253,19 +248,19 @@ export default function Questionnaire() {
 
       {/* Main container */}
       <div className="relative w-full max-w-4xl bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-fade-up">
-        
+
         {/* Header accent bar */}
         <div className="h-2 bg-gradient-to-r from-[#06b6d4] via-[#0ea5e9] to-[#10b981]" />
 
         <div className="p-6 md:p-10 lg:p-12">
-          
+
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-[#ecfeff] rounded-full border border-[#06b6d4]/20">
               <span className="w-2 h-2 bg-[#10b981] rounded-full animate-pulse" />
               <span className="text-sm font-medium text-[#0891b2]">Step {currentStep} of {totalSteps}</span>
             </div>
-            
+
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-3">
               Complete Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#06b6d4] to-[#10b981]">Health Profile</span>
             </h2>
@@ -284,27 +279,24 @@ export default function Questionnaire() {
                     // Allow going back to previous steps
                     if (step < currentStep) setCurrentStep(step);
                   }}
-                  className={`flex flex-col items-center transition-all duration-300 ${
-                    step < currentStep ? 'cursor-pointer hover:scale-110' : 'cursor-default'
-                  }`}
+                  className={`flex flex-col items-center transition-all duration-300 ${step < currentStep ? 'cursor-pointer hover:scale-110' : 'cursor-default'
+                    }`}
                 >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
-                    step <= currentStep 
-                      ? 'bg-gradient-to-r from-[#06b6d4] to-[#0891b2] text-white shadow-lg' 
-                      : 'bg-slate-100 text-slate-400'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${step <= currentStep
+                    ? 'bg-gradient-to-r from-[#06b6d4] to-[#0891b2] text-white shadow-lg'
+                    : 'bg-slate-100 text-slate-400'
+                    }`}>
                     {step < currentStep ? '✓' : step}
                   </div>
-                  <span className={`text-xs mt-2 font-medium ${
-                    step <= currentStep ? 'text-[#0891b2]' : 'text-slate-400'
-                  }`}>
+                  <span className={`text-xs mt-2 font-medium ${step <= currentStep ? 'text-[#0891b2]' : 'text-slate-400'
+                    }`}>
                     {step === 1 ? 'Basic' : step === 2 ? 'Goals' : 'Lifestyle'}
                   </span>
                 </button>
               ))}
             </div>
             <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-[#06b6d4] to-[#10b981] transition-all duration-500"
                 style={{ width: `${(currentStep / totalSteps) * 100}%` }}
               />
@@ -369,7 +361,7 @@ export default function Questionnaire() {
                 Previous
               </button>
             )}
-            
+
             {currentStep < totalSteps ? (
               <button
                 onClick={nextStep}
@@ -429,7 +421,7 @@ export default function Questionnaire() {
 }
 
 // Processing Step Component
-function ProcessingStep({ icon, text, delay, isActive }) {
+function ProcessingStep({ icon, text, delay }) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -447,8 +439,8 @@ function ProcessingStep({ icon, text, delay, isActive }) {
       <div className="flex-1">
         <p className="font-semibold text-slate-800 text-sm">{text}</p>
         <div className="h-1.5 bg-slate-200 rounded-full mt-2 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-[#06b6d4] to-[#10b981] rounded-full animate-[loading_2s_ease-in-out_infinite]" 
-               style={{ width: '0%', animation: 'loading 2s ease-in-out infinite' }} />
+          <div className="h-full bg-gradient-to-r from-[#06b6d4] to-[#10b981] rounded-full animate-[loading_2s_ease-in-out_infinite]"
+            style={{ width: '0%', animation: 'loading 2s ease-in-out infinite' }} />
         </div>
       </div>
       <div className="w-6 h-6 border-2 border-[#06b6d4] border-t-transparent rounded-full animate-spin" />
@@ -492,11 +484,10 @@ function Input({ label, name, value, placeholder, handleChange, icon, error, inp
           value={value}
           placeholder={placeholder}
           onChange={handleChange}
-          className={`w-full px-4 py-3.5 rounded-xl border text-slate-800 placeholder-slate-400 bg-slate-50 focus:bg-white focus:outline-none transition-all duration-300 ${
-            error 
-              ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100' 
-              : 'border-slate-200 focus:border-[#06b6d4] focus:ring-4 focus:ring-[#06b6d4]/10'
-          }`}
+          className={`w-full px-4 py-3.5 rounded-xl border text-slate-800 placeholder-slate-400 bg-slate-50 focus:bg-white focus:outline-none transition-all duration-300 ${error
+            ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100'
+            : 'border-slate-200 focus:border-[#06b6d4] focus:ring-4 focus:ring-[#06b6d4]/10'
+            }`}
         />
         {error && (
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-red-500">
@@ -533,11 +524,10 @@ function Select({ label, name, options, value, handleChange, icon, error, isOpti
           name={name}
           value={value}
           onChange={handleChange}
-          className={`w-full px-4 py-3.5 rounded-xl border text-slate-800 bg-slate-50 focus:bg-white focus:outline-none transition-all duration-300 appearance-none cursor-pointer ${
-            error 
-              ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100' 
-              : 'border-slate-200 focus:border-[#06b6d4] focus:ring-4 focus:ring-[#06b6d4]/10'
-          }`}
+          className={`w-full px-4 py-3.5 rounded-xl border text-slate-800 bg-slate-50 focus:bg-white focus:outline-none transition-all duration-300 appearance-none cursor-pointer ${error
+            ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100'
+            : 'border-slate-200 focus:border-[#06b6d4] focus:ring-4 focus:ring-[#06b6d4]/10'
+            }`}
         >
           <option value="">{isOptional ? `Select ${label} (Optional)` : `Select ${label}`}</option>
           {options.map((opt, index) => (

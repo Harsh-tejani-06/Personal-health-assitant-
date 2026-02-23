@@ -40,7 +40,6 @@ export default function Leaderboard() {
     }
 
     const topThree = leaderboard.slice(0, 3);
-    const rest = leaderboard.slice(3);
     const maxPoints = leaderboard[0]?.totalPoints || 1;
 
     if (loading) {
@@ -280,8 +279,8 @@ export default function Leaderboard() {
 function StatCard({ label, value, icon, highlight }) {
     return (
         <div className={`relative overflow-hidden rounded-2xl p-4 backdrop-blur-md border transition-transform hover:scale-105 ${highlight
-                ? 'bg-white/25 border-white/30 shadow-lg'
-                : 'bg-white/15 border-white/20'
+            ? 'bg-white/25 border-white/30 shadow-lg'
+            : 'bg-white/15 border-white/20'
             }`}>
             {highlight && (
                 <div className="absolute inset-0 overflow-hidden rounded-2xl">
@@ -298,7 +297,7 @@ function StatCard({ label, value, icon, highlight }) {
 }
 
 // ====== Podium Card ======
-function PodiumCard({ user, rank, podiumHeight, gradientFrom, gradientTo, darkGradientFrom, darkGradientTo, emoji, delay, isFirst, ringColor, bgAccent, maxPoints }) {
+function PodiumCard({ user, rank, podiumHeight, gradientFrom, gradientTo, darkGradientFrom, darkGradientTo, emoji, delay, isFirst, ringColor, bgAccent }) {
     const [animate, setAnimate] = useState(false);
 
     useEffect(() => {
@@ -306,7 +305,7 @@ function PodiumCard({ user, rank, podiumHeight, gradientFrom, gradientTo, darkGr
         return () => clearTimeout(timer);
     }, []);
 
-    const pointsPercent = maxPoints > 0 ? Math.round((user.totalPoints / maxPoints) * 100) : 0;
+
 
     return (
         <div
@@ -531,6 +530,7 @@ function LoadingSkeleton() {
 
 // ====== Confetti ======
 function Confetti() {
+    /* eslint-disable react-hooks/purity */
     const particles = useMemo(() => {
         const colors = ['#fbbf24', '#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4'];
         const shapes = ['circle', 'square', 'triangle'];
@@ -546,6 +546,7 @@ function Confetti() {
             shape: shapes[Math.floor(Math.random() * shapes.length)],
         }));
     }, []);
+    /* eslint-enable react-hooks/purity */
 
     return (
         <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
