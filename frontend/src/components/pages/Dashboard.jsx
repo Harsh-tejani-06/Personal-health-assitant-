@@ -1,22 +1,33 @@
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  ResponsiveContainer
 } from "recharts";
 import { useState, useEffect } from "react";
+import { updateUserProfile } from "../../services/profileService";
+import { getActivity, logActivity } from "../../services/activityService";
 
 export default function Dashboard() {
   const [greeting, setGreeting] = useState("Good morning");
   const [currentDate, setCurrentDate] = useState("");
   const [currentTime, setCurrentTime] = useState("");
-  const [waterIntake, setWaterIntake] = useState(2.5);
+  const [waterIntake, setWaterIntake] = useState(0);
+
+  useEffect(() => {
+    const fetchActivity = async () => {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const activity = await getActivity(today);
+        if (activity && activity.water) {
+          setWaterIntake(activity.water.amount || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch activity:", error);
+      }
+    };
+    fetchActivity();
+  }, []);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -44,6 +55,20 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
+
+  const handleNameSave = async () => {
+    if (!editedName.trim()) return;
+    try {
+      await updateUserProfile({ displayName: editedName });
+      setUser(prev => ({ ...prev, displayName: editedName }));
+      setIsEditingName(false);
+    } catch (error) {
+      console.error("Failed to update name:", error);
+      alert("Failed to update name");
+    }
+  };
 
   // Fetch User Profile
   useEffect(() => {
@@ -59,12 +84,14 @@ export default function Dashboard() {
         if (res.ok) {
           setUser({
             fullname: data.fullname || "User",
+            displayName: data.displayName || "", // Store displayName
             height: data.healthProfile?.height || 0,
             weight: data.healthProfile?.weight || 0,
             goal: data.healthProfile?.primaryGoal?.replace("_", " ") || "Stay Fit",
             streak: 12,
             avatar: data.avatar ? `http://localhost:5000${data.avatar}` : "/user.png"
           });
+          setEditedName(data.displayName || data.fullname || "User");
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -161,8 +188,32 @@ export default function Dashboard() {
               <span className="text-slate-300 dark:text-slate-600">|</span>
               <span className="text-[#0891b2] dark:text-[#22d3ee] text-sm font-mono">{currentTime}</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-white">
-              {greeting}, <span className="text-[#b89cff]">{user.fullname.split(' ')[0]}</span>! 👋
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-white flex items-center gap-2 flex-wrap">
+              {greeting},
+              {isEditingName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    className="bg-transparent border-b-2 border-[#b89cff] text-[#b89cff] focus:outline-none min-w-[150px] max-w-[250px]"
+                    autoFocus
+                  />
+                  <button onClick={handleNameSave} className="text-green-500 hover:text-green-600 text-xl md:text-2xl" title="Save">✓</button>
+                  <button onClick={() => { setIsEditingName(false); setEditedName(user.displayName || user.fullname); }} className="text-red-500 hover:text-red-600 text-xl md:text-2xl" title="Cancel">✕</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 group">
+                  <span className="text-[#b89cff]">{user.displayName || user.fullname}</span>! 👋
+                  <button
+                    onClick={() => { setIsEditingName(true); setEditedName(user.displayName || user.fullname); }}
+                    className="text-slate-400 hover:text-[#b89cff] opacity-0 group-hover:opacity-100 transition-opacity text-lg md:text-xl cursor-pointer"
+                    title="Edit Name"
+                  >
+                    ✎
+                  </button>
+                </div>
+              )}
             </h1>
           </div>
           <div className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-2xl px-4 py-2 border border-slate-200 dark:border-slate-700 shadow-sm">
@@ -191,7 +242,8 @@ export default function Dashboard() {
 
               <div className="flex-1">
                 <p className="text-[#b89cff] text-sm font-medium mb-1">Health Enthusiast</p>
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">{user.fullname}</h2>
+                {/* <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">{user.fullname}</h2> */}
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">{editedName}</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <LightStatCard title="Height" value={`${user.height} cm`} icon="📏" />
@@ -321,47 +373,62 @@ export default function Dashboard() {
               ))}
             </div>
 
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={habitData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="day"
-                    stroke="#94a3b8"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="#94a3b8"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    domain={[0, 1]}
-                    tickFormatter={(v) => v === 1 ? "✓" : "○"}
-                  />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-white dark:bg-slate-700 p-3 rounded-xl shadow-lg border border-slate-100 dark:border-slate-600">
-                            <p className="font-bold text-slate-800 dark:text-white mb-2">{label}</p>
-                            {payload.map((entry, index) => (
-                              <p key={index} className="text-sm" style={{ color: entry.color }}>
-                                {entry.name}: {entry.value === 1 ? 'Completed ✓' : 'Missed ○'}
-                              </p>
-                            ))}
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar dataKey="exercise" fill="#b89cff" name="Exercise" radius={[6, 6, 0, 0]} maxBarSize={50} />
-                  <Bar dataKey="diet" fill="#10b981" name="Diet" radius={[6, 6, 0, 0]} maxBarSize={50} />
-                  <Bar dataKey="skincare" fill="#38bdf8" name="Skin Care" radius={[6, 6, 0, 0]} maxBarSize={50} />
-                </BarChart>
-              </ResponsiveContainer>
+            {/* Weekly Summary Section */}
+            <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
+              <h4 className="font-bold text-slate-800 dark:text-white mb-4">Weekly Summary</h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {(() => {
+                  const stats = [
+                    { name: 'Exercise', key: 'exercise', icon: '🏃' },
+                    { name: 'Diet', key: 'diet', icon: '🥗' },
+                    { name: 'Skin Care', key: 'skincare', icon: '✨' },
+                    { name: 'Water', key: 'water', icon: '💧' }
+                  ].map(habit => {
+                    const completed = habitData.filter(d => {
+                      if (habit.key === 'water') return d[habit.key] >= 2.0;
+                      return d[habit.key] === 1;
+                    }).length;
+                    return { ...habit, completed };
+                  });
+
+                  const best = [...stats].sort((a, b) => b.completed - a.completed)[0];
+                  // Needs attention: missed > 3 days (so completed < 4)
+                  const worst = stats.filter(h => h.completed < 4).sort((a, b) => a.completed - b.completed)[0];
+
+                  return (
+                    <>
+                      {/* Best Habit */}
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4 border border-green-100 dark:border-green-800 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-green-100 dark:bg-green-800/40 rounded-xl flex items-center justify-center text-2xl">
+                          {best.icon}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Best Habit</p>
+                          <p className="font-bold text-slate-800 dark:text-white">{best.name}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{best.completed}/7 days completed</p>
+                        </div>
+                      </div>
+
+                      {/* Needs Attention */}
+                      <div className={`rounded-2xl p-4 border flex items-center gap-4 ${worst ? 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800'}`}>
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${worst ? 'bg-red-100 dark:bg-red-800/40' : 'bg-blue-100 dark:bg-blue-800/40'}`}>
+                          {worst ? worst.icon : '🌟'}
+                        </div>
+                        <div>
+                          <p className={`text-xs font-bold uppercase tracking-wider ${worst ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                            {worst ? 'Needs Attention' : 'All Good!'}
+                          </p>
+                          <p className="font-bold text-slate-800 dark:text-white">{worst ? worst.name : 'On Track'}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {worst ? `Missed ${7 - worst.completed} days this week` : 'Keep it up!'}
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         </div>
@@ -431,8 +498,16 @@ export default function Dashboard() {
           <WaterTracker
             current={waterIntake}
             goal={3}
-            onAdd={() => setWaterIntake(prev => Math.min(prev + 0.25, 4))}
-            onReduce={() => setWaterIntake(prev => Math.max(prev - 0.25, 0))}
+            onAdd={() => {
+              const newValue = Math.min(waterIntake + 0.25, 4);
+              setWaterIntake(newValue);
+              logActivity(null, "water", false, newValue);
+            }}
+            onReduce={() => {
+              const newValue = Math.max(waterIntake - 0.25, 0);
+              setWaterIntake(newValue);
+              logActivity(null, "water", false, newValue);
+            }}
           />
 
           <div className="lg:col-span-2 h-full">
@@ -510,8 +585,8 @@ export default function Dashboard() {
 function LightStatCard({ title, value, subtitle, icon, highlight = false, color }) {
   return (
     <div className={`p-4 rounded-2xl border transition-all duration-300 ${highlight
-        ? 'bg-[#b89cff]/10 border-[#b89cff]/30'
-        : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 hover:border-[#b89cff]/30'
+      ? 'bg-[#b89cff]/10 border-[#b89cff]/30'
+      : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 hover:border-[#b89cff]/30'
       }`}>
       <div className="flex items-center gap-2 mb-2">
         <span className="text-lg">{icon}</span>
@@ -548,10 +623,10 @@ function LightActivityRow({ label, value, time, icon }) {
         </div>
       </div>
       <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${isDone
-          ? 'bg-[#10b981]/10 text-[#059669] dark:text-[#34d399] border border-[#10b981]/20'
-          : isPending
-            ? 'bg-[#f59e0b]/10 text-[#d97706] dark:text-[#fbbf24] border border-[#f59e0b]/20'
-            : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
+        ? 'bg-[#10b981]/10 text-[#059669] dark:text-[#34d399] border border-[#10b981]/20'
+        : isPending
+          ? 'bg-[#f59e0b]/10 text-[#d97706] dark:text-[#fbbf24] border border-[#f59e0b]/20'
+          : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
         }`}>
         {value}
       </span>
@@ -642,14 +717,14 @@ function WaterTracker({ current, goal, onAdd, onReduce }) {
       <div className="flex items-center gap-4 mt-6 w-full justify-center">
         <button
           onClick={onReduce}
-          className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center transition-all text-xl font-bold pb-1"
+          className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center transition-all text-xl font-bold pb-1 cursor-pointer"
           title="Reduce by 0.25L"
         >
           -
         </button>
         <button
           onClick={onAdd}
-          className="w-10 h-10 rounded-full bg-blue-500 text-white shadow-lg shadow-blue-200 dark:shadow-blue-900/30 hover:bg-blue-600 hover:scale-105 active:scale-95 flex items-center justify-center transition-all text-xl font-bold pb-1"
+          className="w-10 h-10 rounded-full bg-blue-500 text-white shadow-lg shadow-blue-200 dark:shadow-blue-900/30 hover:bg-blue-600 hover:scale-105 active:scale-95 flex items-center justify-center transition-all text-xl font-bold pb-1 cursor-pointer"
           title="Add 0.25L"
         >
           +

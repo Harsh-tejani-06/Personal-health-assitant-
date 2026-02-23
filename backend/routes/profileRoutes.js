@@ -2,6 +2,7 @@ import express from "express";
 import {
   saveHealthProfile,
   getProfile,
+  updateProfile,
   saveLLMAnswers,
   uploadAvatar
 } from "../controllers/profileController.js";
@@ -36,6 +37,9 @@ router.post("/profile", protect, saveHealthProfile);
 
 // Get profile
 router.get("/profile", protect, getProfile);
+
+// Update profile (basic info)
+router.put("/profile", protect, updateProfile);
 
 // Save AI answers
 router.post("/llm-answer", protect, saveLLMAnswers);

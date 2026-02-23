@@ -228,193 +228,217 @@ export default function Chatbot() {
   const isToday = selectedDate === getTodayDate();
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-[900px] mx-auto font-['Inter',sans-serif]">
+    <div className="relative h-screen w-full overflow-hidden bg-[#f8fafc] dark:bg-[#0f172a]">
 
-      {/* ============ HEADER ============ */}
-      <div className="flex items-center justify-between px-5 py-4 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl mb-3 border border-slate-200/50 dark:border-slate-700/50 shadow-sm transition-colors">
-        <div className="flex items-center gap-3">
-          <div className="w-[42px] h-[42px] rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-            <BotIcon />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight">
-              Health Assistant
-            </h2>
-            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-              Personalized health advice • Powered by AI
-            </p>
-          </div>
+      {/* ============ SCROLLABLE MESSAGE AREA ============ */}
+      <div className="absolute inset-0 w-full overflow-y-auto custom-scrollbar">
+        <div className="max-w-[900px] mx-auto w-full flex flex-col min-h-full pt-[90px] pb-[100px] px-5">
+
+          {/* Messages Layout */}
+          {loading ? (
+            <div className="flex items-center justify-center flex-1 text-slate-400 dark:text-slate-500 text-sm">
+              <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mr-3" />
+              Loading messages...
+            </div>
+          ) : messages.length === 0 ? (
+            /* -------- Empty state -------- */
+            <div className="flex flex-col items-center justify-center flex-1 gap-4 py-10">
+              <div className="w-[72px] h-[72px] rounded-2xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-500/25 animate-pulse">
+                <BotIcon />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+                {isToday ? "Start a Conversation" : `No chats on ${formatDate(selectedDate)}`}
+              </h3>
+              <p className="text-sm text-slate-400 dark:text-slate-500 text-center max-w-[360px] leading-relaxed">
+                {isToday
+                  ? "Ask me anything about your health — nutrition, exercise, skin care, sleep tips, and more!"
+                  : "Select today's date to start a new conversation."}
+              </p>
+              {isToday && (
+                <div className="flex flex-wrap gap-2 justify-center mt-2">
+                  {[
+                    "💪 Workout for my goals",
+                    "🥗 Diet suggestions",
+                    "😴 Sleep improvement tips",
+                    "✨ Skin care routine",
+                  ].map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      onClick={() => {
+                        setInput(suggestion);
+                        inputRef.current?.focus();
+                      }}
+                      className="px-3.5 py-2 rounded-full border border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-gradient-to-br hover:from-indigo-400 hover:to-indigo-600 hover:text-white hover:border-transparent transition-all shadow-sm"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* -------- Messages -------- */
+            <div className="flex flex-col gap-4">
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`flex gap-2.5 items-start animate-fadeIn ${msg.role === "user" ? "flex-row-reverse pl-10" : "flex-row pr-10"
+                    }`}
+                >
+                  {/* Avatar */}
+                  <div
+                    className={`w-[34px] h-[34px] min-w-[34px] rounded-xl flex items-center justify-center text-white shadow-md ${msg.role === "user"
+                      ? "bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/25"
+                      : "bg-gradient-to-br from-indigo-400 to-indigo-600 shadow-indigo-500/25"
+                      }`}
+                  >
+                    {msg.role === "user" ? <UserIcon /> : <BotIcon />}
+                  </div>
+
+                  {/* Bubble */}
+                  <div
+                    className={`px-4 py-3 text-sm leading-relaxed max-w-full break-words whitespace-pre-wrap ${msg.role === "user"
+                      ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-[14px] rounded-br-[4px] shadow-md shadow-blue-500/20"
+                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-[14px] rounded-bl-[4px] border border-slate-200/50 dark:border-slate-700/50 shadow-md shadow-black/[0.04] dark:shadow-black/20"
+                      }`}
+                  >
+                    {msg.content || (msg.streaming ? <TypingDots /> : "")}
+
+                    {/* Time */}
+                    {msg.createdAt && (
+                      <div
+                        className={`mt-1.5 text-[10px] opacity-50 ${msg.role === "user" ? "text-right" : "text-left"
+                          }`}
+                      >
+                        {formatTime(msg.createdAt)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div ref={chatEndRef} />
         </div>
-
-        {/* Date toggle */}
-        <button
-          onClick={() => setShowDates(!showDates)}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${showDates
-              ? 'bg-gradient-to-br from-indigo-400 to-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-              : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-indigo-300 shadow-sm'
-            }`}
-        >
-          <CalendarIcon />
-          {formatDate(selectedDate)}
-          <svg
-            width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth={2}
-            className={`transition-transform duration-300 ${showDates ? 'rotate-180' : 'rotate-0'}`}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
       </div>
 
-      {/* ============ DATE PICKER DROPDOWN ============ */}
-      {showDates && (
-        <div className="bg-white/97 dark:bg-slate-800/97 backdrop-blur-xl rounded-2xl p-3 mb-3 border border-slate-200/50 dark:border-slate-700/50 shadow-xl max-h-[200px] overflow-y-auto animate-fadeIn transition-colors">
-          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">
-            Chat History
-          </p>
-          <div className="flex flex-col gap-1">
-            {dates.map((d) => (
+      {/* ============ FIXED HEADER ============ */}
+      <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
+        <div className="bg-gradient-to-b from-[#f8fafc] via-[#f8fafc]/95 to-transparent dark:from-[#0f172a] dark:via-[#0f172a]/95 dark:to-transparent pb-4 pt-4 px-5">
+          <div className="max-w-[900px] mx-auto pointer-events-auto">
+            <div className="flex items-center justify-between px-5 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-[42px] h-[42px] rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                  <BotIcon />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight">
+                    Health Assistant
+                  </h2>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                    Personalized health advice • Powered by AI
+                  </p>
+                </div>
+              </div>
+
+              {/* Date toggle */}
               <button
-                key={d}
-                onClick={() => {
-                  setSelectedDate(d);
-                  setShowDates(false);
-                }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all hover:translate-x-1 ${d === selectedDate
-                    ? 'bg-gradient-to-br from-indigo-400 to-indigo-600 text-white'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                onClick={() => setShowDates(!showDates)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${showDates
+                  ? 'bg-gradient-to-br from-indigo-400 to-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                  : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-indigo-300 shadow-sm'
                   }`}
               >
                 <CalendarIcon />
-                {formatDate(d)}
-                <span className="ml-auto text-xs opacity-60">{d}</span>
+                {formatDate(selectedDate)}
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth={2}
+                  className={`transition-transform duration-300 ${showDates ? 'rotate-180' : 'rotate-0'}`}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
-            ))}
-            {dates.length === 0 && (
-              <p className="py-3 text-center text-slate-400 dark:text-slate-500 text-sm">
-                No chat history yet
-              </p>
+            </div>
+
+            {/* Date Picker Dropdown (Absolute relatve to this container) */}
+            {showDates && (
+              <div className="absolute top-[80px] right-5 z-30 w-full max-w-xs">
+                <div className="bg-white/97 dark:bg-slate-800/97 backdrop-blur-xl rounded-2xl p-3 border border-slate-200/50 dark:border-slate-700/50 shadow-xl max-h-[300px] overflow-y-auto animate-fadeIn transition-colors">
+                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">
+                    Chat History
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    {dates.map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => {
+                          setSelectedDate(d);
+                          setShowDates(false);
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all hover:translate-x-1 ${d === selectedDate
+                          ? 'bg-gradient-to-br from-indigo-400 to-indigo-600 text-white'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                          }`}
+                      >
+                        <CalendarIcon />
+                        {formatDate(d)}
+                        <span className="ml-auto text-xs opacity-60">{d}</span>
+                      </button>
+                    ))}
+                    {dates.length === 0 && (
+                      <p className="py-3 text-center text-slate-400 dark:text-slate-500 text-sm">
+                        No chat history yet
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
-      )}
+      </div>
 
-      {/* ============ CHAT MESSAGES ============ */}
-      <div className="flex-1 overflow-y-auto px-1 py-4 flex flex-col gap-4">
-        {loading ? (
-          <div className="flex items-center justify-center flex-1 text-slate-400 dark:text-slate-500 text-sm">
-            <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mr-3" />
-            Loading messages...
-          </div>
-        ) : messages.length === 0 ? (
-          /* -------- Empty state -------- */
-          <div className="flex flex-col items-center justify-center flex-1 gap-4 py-10">
-            <div className="w-[72px] h-[72px] rounded-2xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-500/25 animate-pulse">
-              <BotIcon />
-            </div>
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white">
-              {isToday ? "Start a Conversation" : `No chats on ${formatDate(selectedDate)}`}
-            </h3>
-            <p className="text-sm text-slate-400 dark:text-slate-500 text-center max-w-[360px] leading-relaxed">
-              {isToday
-                ? "Ask me anything about your health — nutrition, exercise, skin care, sleep tips, and more!"
-                : "Select today's date to start a new conversation."}
-            </p>
-            {isToday && (
-              <div className="flex flex-wrap gap-2 justify-center mt-2">
-                {[
-                  "💪 Workout for my goals",
-                  "🥗 Diet suggestions",
-                  "😴 Sleep improvement tips",
-                  "✨ Skin care routine",
-                ].map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => {
-                      setInput(suggestion);
-                      inputRef.current?.focus();
-                    }}
-                    className="px-3.5 py-2 rounded-full border border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-gradient-to-br hover:from-indigo-400 hover:to-indigo-600 hover:text-white hover:border-transparent transition-all shadow-sm"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          /* -------- Messages -------- */
-          messages.map((msg, i) => (
+      {/* ============ FIXED INPUT BAR ============ */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none">
+        <div className="bg-gradient-to-t from-[#f8fafc] via-[#f8fafc]/95 to-transparent dark:from-[#0f172a] dark:via-[#0f172a]/95 dark:to-transparent pb-6 pt-10 px-5">
+          <div className="max-w-[900px] mx-auto pointer-events-auto">
             <div
-              key={i}
-              className={`flex gap-2.5 items-start animate-fadeIn ${msg.role === "user" ? "flex-row-reverse pl-10" : "flex-row pr-10"
+              className={`flex items-center gap-2.5 px-4 py-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-lg transition-all focus-within:border-indigo-400/50 focus-within:ring-2 focus-within:ring-indigo-400/10 ${!isToday ? "opacity-50 pointer-events-none" : ""
                 }`}
             >
-              {/* Avatar */}
-              <div
-                className={`w-[34px] h-[34px] min-w-[34px] rounded-xl flex items-center justify-center text-white shadow-md ${msg.role === "user"
-                    ? "bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/25"
-                    : "bg-gradient-to-br from-indigo-400 to-indigo-600 shadow-indigo-500/25"
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  isToday
+                    ? "Ask about your health..."
+                    : "Switch to today to send messages"
+                }
+                disabled={isStreaming || !isToday}
+                className="flex-1 border-none outline-none text-sm text-slate-800 dark:text-slate-100 bg-transparent font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:cursor-not-allowed"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || isStreaming || !isToday}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${input.trim() && !isStreaming
+                  ? "bg-gradient-to-br from-indigo-400 to-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:scale-105 active:scale-95 cursor-pointer"
+                  : "bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
                   }`}
               >
-                {msg.role === "user" ? <UserIcon /> : <BotIcon />}
-              </div>
-
-              {/* Bubble */}
-              <div
-                className={`px-4 py-3 text-sm leading-relaxed max-w-full break-words whitespace-pre-wrap ${msg.role === "user"
-                    ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-[14px] rounded-br-[4px] shadow-md shadow-blue-500/20"
-                    : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-[14px] rounded-bl-[4px] border border-slate-200/50 dark:border-slate-700/50 shadow-md shadow-black/[0.04] dark:shadow-black/20"
-                  }`}
-              >
-                {msg.content || (msg.streaming ? <TypingDots /> : "")}
-
-                {/* Time */}
-                {msg.createdAt && (
-                  <div
-                    className={`mt-1.5 text-[10px] opacity-50 ${msg.role === "user" ? "text-right" : "text-left"
-                      }`}
-                  >
-                    {formatTime(msg.createdAt)}
-                  </div>
-                )}
-              </div>
+                {isStreaming ? <TypingDots /> : <SendIcon />}
+              </button>
             </div>
-          ))
-        )}
-        <div ref={chatEndRef} />
+            <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-medium">
+              AI can make mistakes. Please verify important health information.
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* ============ INPUT BAR ============ */}
-      <div
-        className={`flex items-center gap-2.5 px-4 py-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm mt-2 transition-all focus-within:border-indigo-400/50 focus-within:ring-2 focus-within:ring-indigo-400/10 ${!isToday ? "opacity-50 pointer-events-none" : ""
-          }`}
-      >
-        <input
-          ref={inputRef}
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            isToday
-              ? "Ask about your health..."
-              : "Switch to today to send messages"
-          }
-          disabled={isStreaming || !isToday}
-          className="flex-1 border-none outline-none text-sm text-slate-800 dark:text-slate-100 bg-transparent font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:cursor-not-allowed"
-        />
-        <button
-          onClick={handleSend}
-          disabled={!input.trim() || isStreaming || !isToday}
-          className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${input.trim() && !isStreaming
-              ? "bg-gradient-to-br from-indigo-400 to-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:scale-105 active:scale-95 cursor-pointer"
-              : "bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-            }`}
-        >
-          {isStreaming ? <TypingDots /> : <SendIcon />}
-        </button>
-      </div>
     </div>
   );
 }
