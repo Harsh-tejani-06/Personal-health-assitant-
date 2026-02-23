@@ -143,6 +143,7 @@ router.get("/activity/:date", protect, async (req, res) => {
                 exercise: { completed: false, details: "", duration: 0 },
                 diet: { completed: false, details: "" },
                 skinCare: { completed: false, details: "" },
+                water: { amount: 0, completed: false },
                 pointsEarned: 0
             });
         }
@@ -164,8 +165,8 @@ router.post("/activity/log", protect, async (req, res) => {
         const userId = req.user._id;
         const targetDate = date || getTodayDate();
 
-        if (!["exercise", "diet", "skinCare"].includes(type)) {
-            return res.status(400).json({ message: "Invalid activity type. Use exercise, diet, or skinCare." });
+        if (!["exercise", "diet", "skinCare", "water"].includes(type)) {
+            return res.status(400).json({ message: "Invalid activity type. Use exercise, diet, skinCare, or water." });
         }
 
         // Find or create activity for this date
@@ -175,9 +176,15 @@ router.post("/activity/log", protect, async (req, res) => {
         }
 
         // Update the specific activity
-        activity[type].completed = completed;
-        if (details !== undefined) activity[type].details = details;
-        if (type === "exercise" && duration !== undefined) activity[type].duration = duration;
+        if (type === "water") {
+            // details here is treated as the amount
+            activity.water.amount = Number(details);
+            activity.water.completed = activity.water.amount >= 3; // Hardcoded goal for now, or fetch from user profile
+        } else {
+            activity[type].completed = completed;
+            if (details !== undefined) activity[type].details = details;
+            if (type === "exercise" && duration !== undefined) activity[type].duration = duration;
+        }
 
         await activity.save();
 

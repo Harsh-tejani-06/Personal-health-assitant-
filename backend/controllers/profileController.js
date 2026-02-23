@@ -7,8 +7,32 @@ export const getProfile = async (req, res) => {
     const user = await User.findById(req.user._id);
     res.json({
       fullname: user.fullname,
+      displayName: user.displayName,
       avatar: user.avatar,
       healthProfile: user.healthProfile
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update Profile (Basic Info - Display Name)
+export const updateProfile = async (req, res) => {
+  try {
+    const { fullname, displayName } = req.body;
+
+    const updateData = {};
+    if (displayName !== undefined) updateData.displayName = displayName;
+    if (fullname !== undefined) updateData.fullname = fullname;
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      updateData,
+      { new: true }
+    );
+    res.json({
+      fullname: user.fullname,
+      displayName: user.displayName
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

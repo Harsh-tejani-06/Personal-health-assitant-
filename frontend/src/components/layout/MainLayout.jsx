@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 
 export default function MainLayout() {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const isChatbot = location.pathname === "/chatbot";
 
   return (
     <div className="bg-[#f8fafc] dark:bg-[#0f172a] min-h-screen text-slate-800 dark:text-slate-200 relative transition-colors duration-300">
@@ -16,7 +18,8 @@ export default function MainLayout() {
       {/* Page Content */}
       <div
         className={`
-          relative min-h-screen p-4 md:p-6 lg:p-8
+          relative min-h-screen
+          ${isChatbot ? "p-0" : "p-4 md:p-6 lg:p-8"}
           ${open ? "ml-64" : "ml-20"}
           transition-all duration-300 ease-in-out
         `}

@@ -23,6 +23,10 @@ const dailyActivitySchema = new mongoose.Schema({
         completed: { type: Boolean, default: false },
         details: { type: String, default: "" }
     },
+    water: {
+        amount: { type: Number, default: 0 }, // in liters
+        completed: { type: Boolean, default: false } // if goal reached
+    },
     pointsEarned: {
         type: Number,
         default: 0

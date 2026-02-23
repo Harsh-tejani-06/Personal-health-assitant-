@@ -427,7 +427,6 @@ def validate_images_node(state: RecipeState) -> RecipeState:
             "Respond ONLY with a single JSON object:\n"
             "{\n"
             '  "valid": true or false,\n'
-            '  "reason": "brief explanation",\n'
             '  "detected_ingredients": ["item1", "item2", ...]\n'
             "}\n"
             "Set valid=false if ANY image is completely unrelated to food."

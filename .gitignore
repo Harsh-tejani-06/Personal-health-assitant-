@@ -28,3 +28,9 @@ backend/.env
 frontend/.env
 
 backend/uploads
+
+node_modules/
+__pycache__/
+*.pyc
+
+backend/uploads/

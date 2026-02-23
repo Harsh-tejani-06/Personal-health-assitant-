@@ -29,3 +29,8 @@ export const getOnboardingStatus = async () => {
   const res = await API.get("/onboarding-status");
   return res.data;
 };
+
+export const updateUserProfile = async (data) => {
+  const res = await API.put("/profile", data);
+  return res.data;
+};
