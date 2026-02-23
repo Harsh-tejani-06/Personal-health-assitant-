@@ -2,10 +2,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import GetStarted from "./components/GetStarted";
 import Auth from "./components/Auth";
+import ForgotPassword from "./components/ForgotPassword";
 import Questionnaire from "./components/Questionnaire";
 import AIQuestions from "./components/AIQuestions";
 
 import MainLayout from "./components/layout/MainLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Dashboard from "./components/pages/Dashboard";
 import Exercise from "./components/pages/Exercise";
@@ -23,20 +25,21 @@ export default function App() {
         <Routes>
           <Route path="/" element={<GetStarted />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/questionnaire" element={<Questionnaire />} />
-          <Route path="/ai-questions" element={<AIQuestions />} />
-          {/* Sidebar Layout */}
-          <Route element={<MainLayout />}>
-
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/exercise" element={<Exercise />} />
-            <Route path="/skin-care" element={<SkinCare />} />
-            <Route path="/recipes" element={<Recipes />} />
-            <Route path="/chatbot" element={<Chatbot />} />
-            <Route path="/diet" element={<Diet />} />
-            <Route path="/activity" element={<Activity />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          {/* Protected routes — require login */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/questionnaire" element={<Questionnaire />} />
+            <Route path="/ai-questions" element={<AIQuestions />} />
+            <Route element={<MainLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/exercise" element={<Exercise />} />
+              <Route path="/skin-care" element={<SkinCare />} />
+              <Route path="/recipes" element={<Recipes />} />
+              <Route path="/chatbot" element={<Chatbot />} />
+              <Route path="/diet" element={<Diet />} />
+              <Route path="/activity" element={<Activity />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+            </Route>
           </Route>
 
         </Routes>

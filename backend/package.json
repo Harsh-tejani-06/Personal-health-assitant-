@@ -1,6 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -22,6 +23,7 @@
     "mongoose": "^9.2.0",
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
+    "nodemailer": "^8.0.1",
     "path": "^0.12.7",
     "uuid": "^13.0.0"
   }

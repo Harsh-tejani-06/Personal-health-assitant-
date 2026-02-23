@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ai_assistant from "../assets/image.png";
-import { signupUser, loginUser } from "../services/authService";
+import { signupUser, loginUser, isLoggedIn } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 import { getOnboardingStatus } from "../services/profileService";
 
@@ -11,6 +11,13 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    if (isLoggedIn()) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -37,7 +44,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f0f9ff] via-[#e0f2fe] to-[#f0fdf4] flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
-      
+
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-96 h-96 bg-[#06b6d4]/10 rounded-full blur-3xl animate-pulse" />
@@ -51,15 +58,15 @@ export default function Auth() {
 
       {/* Main container */}
       <div className="relative w-full max-w-6xl bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-fade-up">
-        
+
         {/* Header accent bar */}
         <div className="h-2 bg-gradient-to-r from-[#06b6d4] via-[#0ea5e9] to-[#10b981]" />
 
         <div className="flex flex-col lg:flex-row min-h-[600px]">
-          
+
           {/* ================= LEFT SIDE - Visual Showcase ================= */}
           <div className="w-full lg:w-1/2 relative bg-gradient-to-br from-[#06b6d4]/5 to-[#10b981]/5 p-8 lg:p-12 flex items-center justify-center overflow-hidden">
-            
+
             {/* Background pattern */}
             <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2306b6d4\' fill-opacity=\'0.03\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50" />
 
@@ -132,7 +139,7 @@ export default function Auth() {
           {/* ================= RIGHT SIDE - Auth Form ================= */}
           <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12 bg-white">
             <div className="w-full max-w-md">
-              
+
               {/* Logo/Brand */}
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#06b6d4] to-[#10b981] rounded-xl flex items-center justify-center text-white text-2xl shadow-lg">
@@ -149,8 +156,8 @@ export default function Auth() {
                   {isLogin ? "Welcome back" : "Create account"}
                 </h2>
                 <p className="text-slate-600 text-sm">
-                  {isLogin 
-                    ? "Enter your credentials to access your health dashboard" 
+                  {isLogin
+                    ? "Enter your credentials to access your health dashboard"
                     : "Start your personalized health journey today"}
                 </p>
               </div>
@@ -203,7 +210,11 @@ export default function Auth() {
 
                 {isLogin && (
                   <div className="flex justify-end">
-                    <button className="text-sm text-[#06b6d4] hover:text-[#0891b2] font-medium transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/forgot-password")}
+                      className="text-sm text-[#06b6d4] hover:text-[#0891b2] font-medium transition-colors"
+                    >
                       Forgot password?
                     </button>
                   </div>
@@ -321,9 +332,8 @@ function FeatureCard({ title, image, bg, icon }) {
 function OrbitIcon({ icon, reverse = false }) {
   return (
     <div
-      className={`absolute inset-0 flex items-center justify-center pointer-events-none ${
-        reverse ? "animate-[spin_15s_linear_infinite_reverse]" : "animate-[spin_20s_linear_infinite]"
-      }`}
+      className={`absolute inset-0 flex items-center justify-center pointer-events-none ${reverse ? "animate-[spin_15s_linear_infinite_reverse]" : "animate-[spin_20s_linear_infinite]"
+        }`}
     >
       <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-lg border border-slate-100 transform translate-x-28 md:translate-x-36">
         {icon}

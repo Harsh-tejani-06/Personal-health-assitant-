@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
+import { logoutUser } from "../../services/authService";
 
 export default function Sidebar({ open, setOpen }) {
   const location = useLocation();
@@ -122,8 +123,8 @@ export default function Sidebar({ open, setOpen }) {
             >
               {/* Background glow */}
               <div className={`absolute inset-0 rounded-xl transition-all duration-500 ${theme === "dark"
-                  ? "bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30"
-                  : "bg-gradient-to-br from-amber-400/20 to-orange-400/20 border border-amber-400/30"
+                ? "bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30"
+                : "bg-gradient-to-br from-amber-400/20 to-orange-400/20 border border-amber-400/30"
                 }`} />
 
               {/* Icon container with rotation */}
@@ -185,6 +186,27 @@ export default function Sidebar({ open, setOpen }) {
               <p className="text-lg font-bold text-slate-700 dark:text-slate-200 font-mono">{currentTime}</p>
             </div>
           )}
+
+          {/* Logout Button */}
+          <div className={`${!open ? 'flex justify-center' : ''}`}>
+            <button
+              onClick={logoutUser}
+              className={`group relative flex items-center gap-3 w-full px-3 py-3 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-300 ${!open && 'justify-center'}`}
+              title={!open ? 'Logout' : ''}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              {open && <span className="text-sm font-medium">Logout</span>}
+              {!open && (
+                <div className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                  Logout
+                </div>
+              )}
+            </button>
+          </div>
 
           {/* User Mini Profile */}
           <div className={`flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 ${!open && 'justify-center'}`}>

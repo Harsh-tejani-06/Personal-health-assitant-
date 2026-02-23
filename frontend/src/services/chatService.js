@@ -44,3 +44,23 @@ export const getRecipeHistory = async (date) => {
     return res.data;
 };
 
+// -------- Starred Recipes --------
+
+// Get all starred recipes
+export const getStarredRecipes = async () => {
+    const res = await API.get("/recipes/starred");
+    return res.data;
+};
+
+// Add recipe to favourites
+export const addStarredRecipe = async (recipe) => {
+    const res = await API.post("/recipes/starred", { recipe });
+    return res.data;
+};
+
+// Remove recipe from favourites
+export const removeStarredRecipe = async (id) => {
+    const res = await API.delete(`/recipes/starred/${id}`);
+    return res.data;
+};
+

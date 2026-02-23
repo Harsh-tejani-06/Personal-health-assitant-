@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import API from "../../api/axios";
-import { getRecipeDates, getRecipeHistory } from "../../services/chatService";
+import { getRecipeDates, getRecipeHistory, getStarredRecipes, addStarredRecipe, removeStarredRecipe } from "../../services/chatService";
 import { addToDiet } from "../../services/dietService";
 
 // -------- Helper: format date --------
@@ -38,15 +38,19 @@ export default function RecipesStream() {
   const [showDates, setShowDates] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dietMsg, setDietMsg] = useState(null);
+  const [starredRecipes, setStarredRecipes] = useState([]);
+  const [showStarred, setShowStarred] = useState(false);
+  const [starredNames, setStarredNames] = useState(new Set());
   const chatEndRef = useRef(null);
   const abortControllerRef = useRef(null);
   const MAX_IMAGES = 3;
 
   const isToday = selectedDate === getTodayDate();
 
-  // Load dates on mount
+  // Load dates and starred recipes on mount
   useEffect(() => {
     loadDates();
+    loadStarredRecipes();
   }, []);
 
   // Load messages when date changes
@@ -170,6 +174,7 @@ export default function RecipesStream() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullText = "";
+      let streamError = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -182,31 +187,48 @@ export default function RecipesStream() {
           if (line.startsWith("data:")) {
             try {
               const data = JSON.parse(line.replace("data: ", ""));
+              if (data.status) {
+                setStreamingText(data.status);
+              }
               if (data.chunk) {
                 fullText += data.chunk;
                 setStreamingText(fullText);
+              }
+              if (data.error) {
+                streamError = data.error;
               }
             } catch (e) { }
           }
         }
       }
 
-      let recipeData = null;
-      try {
-        recipeData = JSON.parse(fullText);
-      } catch (e) { }
+      // If backend sent an error (e.g., not a food image)
+      if (streamError) {
+        setChat(prev => [...prev, {
+          type: "ai",
+          text: streamError,
+          isError: true,
+          timestamp: new Date()
+        }]);
+      } else {
+        let recipeData = null;
+        try {
+          recipeData = JSON.parse(fullText);
+        } catch (e) { }
 
-      setChat(prev => [...prev, {
-        type: "ai",
-        recipe: recipeData,
-        text: null,
-        timestamp: new Date()
-      }]);
+        setChat(prev => [...prev, {
+          type: "ai",
+          recipe: recipeData,
+          text: recipeData ? null : (fullText || "Could not generate a recipe. Please try again."),
+          isError: !recipeData,
+          timestamp: new Date()
+        }]);
+      }
 
     } catch (err) {
       setChat(prev => [...prev, {
         type: "ai",
-        text: "Failed to generate recipe",
+        text: "Failed to generate recipe. Please try again.",
         isError: true,
         timestamp: new Date()
       }]);
@@ -216,6 +238,7 @@ export default function RecipesStream() {
       loadDates();
     }
   };
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -248,6 +271,56 @@ export default function RecipesStream() {
     }
   };
 
+  async function loadStarredRecipes() {
+    try {
+      const data = await getStarredRecipes();
+      const recipes = data.recipes || [];
+      setStarredRecipes(recipes);
+      setStarredNames(new Set(recipes.map(r => r.recipe?.recipe_name)));
+    } catch (err) {
+      console.error("Failed to load starred recipes:", err);
+    }
+  }
+
+  const isRecipeStarred = (recipeName) => {
+    return starredNames.has(recipeName);
+  };
+
+  const getStarredId = (recipeName) => {
+    const found = starredRecipes.find(r => r.recipe?.recipe_name === recipeName);
+    return found?._id;
+  };
+
+  const handleStarRecipe = async (recipe) => {
+    try {
+      await addStarredRecipe(recipe);
+      setDietMsg("⭐ Recipe added to favourites!");
+      setTimeout(() => setDietMsg(null), 2500);
+      await loadStarredRecipes();
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setDietMsg("Already in favourites!");
+      } else {
+        setDietMsg("❌ Failed to star recipe");
+      }
+      setTimeout(() => setDietMsg(null), 2500);
+    }
+  };
+
+  const handleUnstarRecipe = async (recipeName) => {
+    try {
+      const id = getStarredId(recipeName);
+      if (!id) return;
+      await removeStarredRecipe(id);
+      setDietMsg("Removed from favourites");
+      setTimeout(() => setDietMsg(null), 2500);
+      await loadStarredRecipes();
+    } catch (err) {
+      setDietMsg("❌ Failed to remove");
+      setTimeout(() => setDietMsg(null), 2500);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-transparent flex flex-col relative overflow-hidden transition-colors duration-300">
 
@@ -272,9 +345,20 @@ export default function RecipesStream() {
               {isStreaming ? 'Generating...' : 'Online'}
             </div>
 
+            {/* Starred recipes toggle */}
+            <button
+              onClick={() => { setShowStarred(!showStarred); setShowDates(false); }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${showStarred
+                ? 'bg-gradient-to-r from-[#f59e0b] to-[#d97706] text-white border-transparent shadow-lg shadow-[#f59e0b]/30'
+                : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-[#f59e0b]'
+                }`}
+            >
+              ⭐ {starredRecipes.length}
+            </button>
+
             {/* Calendar toggle */}
             <button
-              onClick={() => setShowDates(!showDates)}
+              onClick={() => { setShowDates(!showDates); setShowStarred(false); }}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${showDates
                 ? 'bg-gradient-to-r from-[#b89cff] to-[#7f2dd0] text-white border-transparent shadow-lg shadow-[#b89cff]/30'
                 : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-[#b89cff]'
@@ -314,6 +398,90 @@ export default function RecipesStream() {
               <p className="text-center text-slate-400 dark:text-slate-500 text-sm py-4">No recipe history yet</p>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ====== Starred Recipes — Premium Overlay Panel ====== */}
+      {showStarred && (
+        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowStarred(false)}>
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+
+          {/* Slide-in Panel */}
+          <div
+            className="relative w-full max-w-xl h-full bg-white dark:bg-slate-900 shadow-2xl flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            style={{ animation: 'slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1)' }}
+          >
+            {/* Panel Header */}
+            <div className="relative overflow-hidden border-b border-slate-100 dark:border-slate-800">
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-400/10 via-orange-400/5 to-transparent dark:from-amber-500/10" />
+              <div className="relative px-6 py-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white text-lg shadow-lg shadow-amber-200/50 dark:shadow-none">
+                    ⭐
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-white">Favourite Recipes</h2>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                      {starredRecipes.length} recipe{starredRecipes.length !== 1 ? 's' : ''} saved
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowStarred(false)}
+                  className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center text-slate-400 hover:text-red-500 transition-all hover:rotate-90 duration-300"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              {starredRecipes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-20">
+                  <div className="w-24 h-24 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 rounded-full flex items-center justify-center mb-5 shadow-inner">
+                    <span className="text-5xl">📌</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-2">No favourites yet</h3>
+                  <p className="text-sm text-slate-400 dark:text-slate-500 max-w-xs">
+                    Star a recipe you love to save it here for quick access anytime!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {starredRecipes.map((item, index) => (
+                    <StarredRecipeCard
+                      key={item._id}
+                      item={item}
+                      index={index}
+                      onRemove={async () => {
+                        try {
+                          await removeStarredRecipe(item._id);
+                          setDietMsg("Removed from favourites");
+                          setTimeout(() => setDietMsg(null), 2500);
+                          await loadStarredRecipes();
+                        } catch (e) {
+                          setDietMsg("❌ Failed to remove");
+                          setTimeout(() => setDietMsg(null), 2500);
+                        }
+                      }}
+                      onAddToDiet={handleAddToDiet}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Panel Animations */}
+          <style>{`
+            @keyframes slideInRight {
+              from { transform: translateX(100%); opacity: 0.5; }
+              to { transform: translateX(0); opacity: 1; }
+            }
+          `}</style>
         </div>
       )}
 
@@ -404,9 +572,26 @@ export default function RecipesStream() {
                       {msg.recipe ? (
                         <>
                           <RecipeCard recipe={msg.recipe} />
-                          {/* Add to Diet button */}
+                          {/* Star + Add to Diet buttons */}
                           <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-700 pt-3">
-                            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">➕ Add to My Diet Plan</p>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">➕ Add to My Diet Plan</p>
+                              <button
+                                onClick={() => {
+                                  if (isRecipeStarred(msg.recipe.recipe_name)) {
+                                    handleUnstarRecipe(msg.recipe.recipe_name);
+                                  } else {
+                                    handleStarRecipe(msg.recipe);
+                                  }
+                                }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${isRecipeStarred(msg.recipe.recipe_name)
+                                  ? 'bg-gradient-to-r from-[#f59e0b] to-[#d97706] text-white border-transparent shadow-md shadow-[#f59e0b]/20 hover:shadow-lg'
+                                  : 'bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-[#f59e0b] hover:text-[#f59e0b]'
+                                  }`}
+                              >
+                                {isRecipeStarred(msg.recipe.recipe_name) ? '⭐ Starred' : '☆ Star'}
+                              </button>
+                            </div>
                             <div className="flex gap-2 flex-wrap">
                               {["morning", "afternoon", "night"].map(slot => (
                                 <button
@@ -683,6 +868,194 @@ function RecipeCard({ recipe }) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ====== Starred Recipe Card — Premium Design ======
+function StarredRecipeCard({ item, index = 0, onRemove, onAddToDiet }) {
+  const [expanded, setExpanded] = useState(false);
+  const recipe = item.recipe;
+
+  const ingredients = Array.isArray(recipe.ingredients)
+    ? recipe.ingredients
+    : typeof recipe.ingredients === 'string'
+      ? recipe.ingredients.split(',').map(i => i.trim())
+      : [];
+
+  const steps = Array.isArray(recipe.steps)
+    ? recipe.steps
+    : typeof recipe.steps === 'string'
+      ? recipe.steps.split('\n').filter(s => s.trim())
+      : [];
+
+  const savedDate = item.createdAt
+    ? new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : null;
+
+  return (
+    <div
+      className="group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none hover:border-amber-200 dark:hover:border-amber-800/50"
+      style={{
+        animation: `cardFadeIn 0.4s ease ${index * 80}ms backwards`
+      }}
+    >
+      {/* ---- Card Header ---- */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-400/5 via-orange-400/5 to-rose-400/5 dark:from-amber-500/10 dark:via-orange-500/5 dark:to-transparent" />
+        <div className="relative p-4 flex items-start gap-3">
+          {/* Recipe Icon */}
+          <div className="w-11 h-11 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white text-lg shadow-md shadow-amber-200/50 dark:shadow-none shrink-0 group-hover:scale-110 transition-transform duration-300">
+            🍽️
+          </div>
+
+          {/* Recipe Info */}
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-1.5 leading-tight">
+              {recipe.recipe_name || "Recipe"}
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {recipe.best_time && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-[10px] rounded-full font-semibold border border-purple-100 dark:border-purple-800/30">
+                  🕐 {recipe.best_time}
+                </span>
+              )}
+              {recipe.calories && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-[10px] rounded-full font-semibold border border-orange-100 dark:border-orange-800/30">
+                  🔥 {recipe.calories} cal
+                </span>
+              )}
+              {recipe.protein && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] rounded-full font-semibold border border-blue-100 dark:border-blue-800/30">
+                  💪 {recipe.protein}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-all duration-300 ${expanded
+                  ? 'bg-[#b89cff]/10 text-[#b89cff] rotate-180'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-400 hover:text-[#b89cff] hover:bg-[#b89cff]/10'
+                }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={onRemove}
+              className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+              title="Remove from favourites"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ---- Expanded Details ---- */}
+      <div className={`transition-all duration-400 overflow-hidden ${expanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="px-4 pb-4 space-y-4 border-t border-slate-100 dark:border-slate-700 pt-4">
+
+          {/* Ingredients */}
+          {ingredients.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-5 h-5 bg-emerald-50 dark:bg-emerald-900/20 rounded flex items-center justify-center text-[10px]">📝</span>
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                  Ingredients
+                </p>
+                <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{ingredients.length}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                {ingredients.map((ing, i) => (
+                  <div key={i} className="flex items-start gap-1.5 py-0.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full mt-1.5 shrink-0" />
+                    <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{ing}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Steps */}
+          {steps.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-5 h-5 bg-blue-50 dark:bg-blue-900/20 rounded flex items-center justify-center text-[10px]">👨‍🍳</span>
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                  Steps
+                </p>
+                <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{steps.length}</span>
+              </div>
+              <ol className="space-y-2 relative ml-2">
+                {/* Vertical connector line */}
+                <div className="absolute left-[7px] top-3 bottom-3 w-px bg-gradient-to-b from-[#b89cff]/40 via-[#b89cff]/20 to-transparent" />
+                {steps.map((step, i) => (
+                  <li key={i} className="flex gap-3 relative">
+                    <span className="w-4 h-4 bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0 mt-0.5 z-10 shadow-sm">
+                      {i + 1}
+                    </span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {/* Reason */}
+          {recipe.reason && (
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#b89cff]/5 to-purple-100/30 dark:from-[#b89cff]/10 dark:to-purple-900/10 p-3 border border-[#b89cff]/10 dark:border-[#b89cff]/20">
+              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#b89cff] to-[#7f2dd0] rounded-full" />
+              <p className="text-xs text-slate-600 dark:text-slate-400 italic pl-2">
+                <span className="font-bold text-[#b89cff] not-italic">Why this recipe: </span>
+                {recipe.reason}
+              </p>
+            </div>
+          )}
+
+          {/* Add to Diet */}
+          <div className="pt-1">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Quick Add to Diet</p>
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { slot: "morning", icon: "🌅", label: "Morning" },
+                { slot: "afternoon", icon: "☀️", label: "Afternoon" },
+                { slot: "night", icon: "🌙", label: "Night" }
+              ].map(({ slot, icon, label }) => (
+                <button
+                  key={slot}
+                  onClick={() => onAddToDiet(recipe, slot)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-xl hover:border-[#b89cff] hover:text-[#7f2dd0] dark:hover:text-[#c4b5fd] hover:bg-[#b89cff]/5 hover:shadow-sm transition-all"
+                >
+                  {icon} {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer meta */}
+          {savedDate && (
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 text-right">
+              Saved on {savedDate}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Card entrance animation */}
+      <style>{`
+        @keyframes cardFadeIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

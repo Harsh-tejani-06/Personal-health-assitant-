@@ -7,6 +7,7 @@ import { protect } from "../middleware/authMiddleware.js";
 import User from "../models/User.js";
 import path from "path";
 import RecipeChat from "../models/RecipeChat.js";
+import StarredRecipe from "../models/StarredRecipe.js";
 import { v4 as uuidv4 } from "uuid";
 
 const router = express.Router();
@@ -69,94 +70,195 @@ router.post(
       const message = req.body.message || "";
       const today = getTodayDate();
 
-      // -------- Form for FastAPI --------
-      const form = new FormData();
-      form.append("user_id", userId.toString());
-      form.append("health_profile", JSON.stringify(healthProfile));
-      form.append("previous_recipes", JSON.stringify(previousRecipes));
-      form.append("message", message);
 
-      if (req.files?.length > 0) {
-        const imagePaths = req.files.map(file => file.filename);
-        form.append("image_paths", JSON.stringify(imagePaths));
-      }
 
-      // -------- Find or create today's chat --------
-      let chat = await RecipeChat.findOne({ user: userId, date: today });
-      if (!chat) {
-        chat = new RecipeChat({ user: userId, date: today, messages: [] });
-      }
-
-      chat.messages.push({
+      // -------- Prepare user message (saved to DB only after successful validation) --------
+      const userMessage = {
         role: "user",
         text: message || "Image upload",
         images: req.files?.length ? req.files.map(f => f.filename) : [],
         createdAt: new Date()
-      });
+      };
 
       // -------- SSE headers --------
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
       res.setHeader("Connection", "keep-alive");
 
-      res.write(`data: ${JSON.stringify({ status: "Generating recipe..." })}\n\n`);
+      res.write(`data: ${JSON.stringify({ status: "Connecting to AI..." })}\n\n`);
 
-      // -------- Call FastAPI --------
+      // -------- Build FormData for FastAPI streaming endpoint --------
+      // FastAPI expects: health_profile, previous_recipes, message, images (File uploads)
+      const streamForm = new FormData();
+      streamForm.append("health_profile", JSON.stringify(healthProfile));
+      streamForm.append("previous_recipes", JSON.stringify(previousRecipes));
+      streamForm.append("message", message);
+
+      // Attach actual image files (not filenames) — FastAPI expects UploadFile
+      if (req.files?.length > 0) {
+        for (const file of req.files) {
+          streamForm.append("images", fs.createReadStream(file.path), {
+            filename: file.filename,
+            contentType: file.mimetype,
+          });
+        }
+      }
+
+      // -------- Call FastAPI SSE streaming endpoint --------
       const response = await fetch(
-        "http://127.0.0.1:8000/recipe/generate",
+        "http://127.0.0.1:8000/recipe/recipe/generate/stream",
         {
           method: "POST",
-          body: form,
-          headers: form.getHeaders()
+          body: streamForm,
+          headers: streamForm.getHeaders(),
         }
       );
 
-      const data = await response.json();
-
-      if (!data.success) {
-        res.write(`data: ${JSON.stringify({ error: data.message })}\n\n`);
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("FastAPI error:", response.status, errText);
+        res.write(`data: ${JSON.stringify({ error: "AI service error" })}\n\n`);
         res.end();
         return;
       }
 
-      // -------- Save recipe history --------
-      if (!user.previousRecipes) user.previousRecipes = [];
+      // -------- Parse SSE events from FastAPI and forward to client --------
+      let recipeData = null;
+      let streamError = null;
+      let imageInvalid = false;
+      let detectedIngredients = [];
 
-      user.previousRecipes.push({
-        recipe: data.recipe,
-        ingredients: data.ingredients,
-        createdAt: new Date()
+      const stream = response.body;
+      let buffer = "";
+
+      stream.on("data", (chunk) => {
+        buffer += chunk.toString();
+
+        // SSE events are separated by double newlines
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop(); // keep incomplete part in buffer
+
+        for (const part of parts) {
+          if (!part.trim()) continue;
+
+          const lines = part.split("\n");
+          let eventName = null;
+          let eventData = null;
+
+          for (const line of lines) {
+            if (line.startsWith("event: ")) {
+              eventName = line.slice(7).trim();
+            } else if (line.startsWith("data: ")) {
+              try {
+                eventData = JSON.parse(line.slice(6));
+              } catch (e) {
+                eventData = line.slice(6);
+              }
+            }
+          }
+
+          if (!eventData) continue;
+
+          // Forward events to frontend
+          switch (eventName) {
+            case "status":
+              res.write(`data: ${JSON.stringify({ status: eventData.message || "Processing..." })}\n\n`);
+              break;
+
+            case "validation":
+              if (eventData.valid) {
+                detectedIngredients = eventData.detected_ingredients || [];
+                res.write(`data: ${JSON.stringify({ status: "Images validated ✅ Generating recipe..." })}\n\n`);
+              } else {
+                imageInvalid = true;
+                res.write(`data: ${JSON.stringify({ status: eventData.warning || "Validation issue..." })}\n\n`);
+              }
+              break;
+
+            case "recipe":
+              recipeData = eventData;
+              // Stream recipe as chunk for the frontend to display progressively
+              const recipeText = JSON.stringify(recipeData, null, 2);
+              for (const line of recipeText.split("\n")) {
+                res.write(`data: ${JSON.stringify({ chunk: line })}\n\n`);
+              }
+              break;
+
+            case "error":
+              streamError = eventData.message || "Unknown error";
+              res.write(`data: ${JSON.stringify({ error: streamError })}\n\n`);
+              break;
+
+            case "done":
+              // Will be handled in the 'end' event
+              break;
+
+            default:
+              // Forward unknown events as status
+              if (eventData.chunk) {
+                res.write(`data: ${JSON.stringify({ chunk: eventData.chunk })}\n\n`);
+              } else if (eventData.status) {
+                res.write(`data: ${JSON.stringify({ status: eventData.status })}\n\n`);
+              }
+              break;
+          }
+        }
       });
 
-      const twoWeeksAgo = new Date();
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      stream.on("end", async () => {
+        try {
+          // -------- Only save to DB if image was valid / recipe succeeded --------
+          if (!imageInvalid && recipeData) {
+            // Find or create today's chat
+            let chat = await RecipeChat.findOne({ user: userId, date: today });
+            if (!chat) {
+              chat = new RecipeChat({ user: userId, date: today, messages: [] });
+            }
 
-      user.previousRecipes = user.previousRecipes.filter(
-        r => new Date(r.createdAt) > twoWeeksAgo
-      );
+            // Save user message
+            chat.messages.push(userMessage);
 
-      await user.save();
+            // Save AI recipe response
+            chat.messages.push({
+              role: "ai",
+              text: JSON.stringify(recipeData),
+              createdAt: new Date(),
+            });
 
-      // -------- Save AI message --------
-      chat.messages.push({
-        role: "ai",
-        text: JSON.stringify(data.recipe),
-        createdAt: new Date()
+            chat.updatedAt = new Date();
+            await chat.save();
+
+            // Save recipe to user history
+            if (!user.previousRecipes) user.previousRecipes = [];
+
+            user.previousRecipes.push({
+              recipe: recipeData,
+              ingredients: recipeData.ingredients || detectedIngredients,
+              createdAt: new Date(),
+            });
+
+            const twoWeeksAgo = new Date();
+            twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+            user.previousRecipes = user.previousRecipes.filter(
+              (r) => new Date(r.createdAt) > twoWeeksAgo
+            );
+
+            await user.save();
+          }
+          // If image was invalid or error occurred — skip DB save entirely
+        } catch (saveErr) {
+          console.error("Error saving after stream:", saveErr);
+        }
+
+        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+        res.end();
       });
 
-      chat.updatedAt = new Date();
-      await chat.save();
-
-      // -------- Send recipe in STREAM format --------
-      const recipeText = JSON.stringify(data.recipe, null, 2);
-
-      for (const line of recipeText.split("\n")) {
-        res.write(`data: ${JSON.stringify({ chunk: line })}\n\n`);
-        await new Promise(r => setTimeout(r, 20));
-      }
-
-      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-      res.end();
+      stream.on("error", (err) => {
+        console.error("FastAPI stream error:", err);
+        res.write(`data: ${JSON.stringify({ error: "Stream connection failed" })}\n\n`);
+        res.end();
+      });
 
     } catch (err) {
       console.error("Streaming Error:", err);
@@ -248,6 +350,91 @@ router.get("/recipes/history", protect, async (req, res) => {
 
   } catch (err) {
     res.status(500).json({ message: "Failed to load history" });
+  }
+});
+
+
+// =================================================
+// 5. GET /api/recipes/starred — Get all starred recipes
+// =================================================
+router.get("/recipes/starred", protect, async (req, res) => {
+  try {
+    const starred = await StarredRecipe.find({ user: req.user._id })
+      .sort({ createdAt: -1 });
+
+    res.json({ recipes: starred });
+  } catch (err) {
+    console.error("Starred recipes error:", err);
+    res.status(500).json({ message: "Failed to load starred recipes" });
+  }
+});
+
+
+// =================================================
+// 6. POST /api/recipes/starred — Add recipe to favourites
+// =================================================
+router.post("/recipes/starred", protect, async (req, res) => {
+  try {
+    const { recipe } = req.body;
+
+    if (!recipe || !recipe.recipe_name) {
+      return res.status(400).json({ message: "Recipe data with recipe_name is required" });
+    }
+
+    // Check if already starred
+    const existing = await StarredRecipe.findOne({
+      user: req.user._id,
+      "recipe.recipe_name": recipe.recipe_name
+    });
+
+    if (existing) {
+      return res.status(409).json({ message: "Recipe already starred", id: existing._id });
+    }
+
+    const starred = new StarredRecipe({
+      user: req.user._id,
+      recipe: {
+        recipe_name: recipe.recipe_name,
+        ingredients: recipe.ingredients || [],
+        steps: recipe.steps || [],
+        calories: recipe.calories || "",
+        protein: recipe.protein || "",
+        best_time: recipe.best_time || recipe.bestTime || "",
+        reason: recipe.reason || ""
+      }
+    });
+
+    await starred.save();
+    res.status(201).json({ message: "Recipe starred!", starred });
+
+  } catch (err) {
+    console.error("Star recipe error:", err);
+    res.status(500).json({ message: "Failed to star recipe" });
+  }
+});
+
+
+// =================================================
+// 7. DELETE /api/recipes/starred/:id — Remove recipe from favourites
+// =================================================
+router.delete("/recipes/starred/:id", protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await StarredRecipe.findOneAndDelete({
+      _id: id,
+      user: req.user._id
+    });
+
+    if (!result) {
+      return res.status(404).json({ message: "Starred recipe not found" });
+    }
+
+    res.json({ message: "Recipe removed from favourites" });
+
+  } catch (err) {
+    console.error("Unstar recipe error:", err);
+    res.status(500).json({ message: "Failed to remove starred recipe" });
   }
 });
 
