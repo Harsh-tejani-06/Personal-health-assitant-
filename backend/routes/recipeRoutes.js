@@ -88,25 +88,21 @@ router.post(
       res.write(`data: ${JSON.stringify({ status: "Connecting to AI..." })}\n\n`);
 
       // -------- Build FormData for FastAPI streaming endpoint --------
-      // FastAPI expects: health_profile, previous_recipes, message, images (File uploads)
+      // FastAPI expects: health_profile, previous_recipes, message, image_paths (JSON string of file paths)
       const streamForm = new FormData();
       streamForm.append("health_profile", JSON.stringify(healthProfile));
       streamForm.append("previous_recipes", JSON.stringify(previousRecipes));
       streamForm.append("message", message);
 
-      // Attach actual image files (not filenames) — FastAPI expects UploadFile
+      // Send image file paths as JSON string — FastAPI expects image_paths as Form string
       if (req.files?.length > 0) {
-        for (const file of req.files) {
-          streamForm.append("images", fs.createReadStream(file.path), {
-            filename: file.filename,
-            contentType: file.mimetype,
-          });
-        }
+        const imagePaths = req.files.map(f => f.path.replace(/\\/g, "/"));
+        streamForm.append("image_paths", JSON.stringify(imagePaths));
       }
 
       // -------- Call FastAPI SSE streaming endpoint --------
       const response = await fetch(
-        "http://127.0.0.1:8000/recipe/recipe/generate/stream",
+        "http://127.0.0.1:8000/recipe/generate-stream",
         {
           method: "POST",
           body: streamForm,
@@ -127,6 +123,7 @@ router.post(
       let streamError = null;
       let imageInvalid = false;
       let detectedIngredients = [];
+      let accumulatedChunks = [];  // Accumulate chunk lines to reconstruct recipe JSON
 
       const stream = response.body;
       let buffer = "";
@@ -194,11 +191,19 @@ router.post(
               break;
 
             default:
-              // Forward unknown events as status
+              // FastAPI sends plain data: lines without event: prefix
+              // Handle all data types here for compatibility
               if (eventData.chunk) {
+                accumulatedChunks.push(eventData.chunk);
                 res.write(`data: ${JSON.stringify({ chunk: eventData.chunk })}\n\n`);
+              } else if (eventData.error) {
+                streamError = eventData.error;
+                imageInvalid = true;
+                res.write(`data: ${JSON.stringify({ error: streamError })}\n\n`);
               } else if (eventData.status) {
                 res.write(`data: ${JSON.stringify({ status: eventData.status })}\n\n`);
+              } else if (eventData.done) {
+                // done signal — recipe data will be reconstructed from chunks
               }
               break;
           }
@@ -207,6 +212,19 @@ router.post(
 
       stream.on("end", async () => {
         try {
+          // -------- Reconstruct recipe from accumulated chunks if recipeData wasn't set via named event --------
+          if (!recipeData && accumulatedChunks.length > 0) {
+            try {
+              const fullText = accumulatedChunks.join("\n");
+              const parsed = JSON.parse(fullText);
+              if (parsed.recipe_name || parsed.ingredients || parsed.steps) {
+                recipeData = parsed;
+              }
+            } catch (parseErr) {
+              console.error("Failed to parse accumulated recipe chunks:", parseErr.message);
+            }
+          }
+
           // -------- Only save to DB if image was valid / recipe succeeded --------
           if (!imageInvalid && recipeData) {
             // Find or create today's chat

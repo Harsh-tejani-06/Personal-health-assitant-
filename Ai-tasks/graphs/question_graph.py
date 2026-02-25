@@ -11,8 +11,8 @@ class GraphState(dict):
 
 
 def generate_questions(state: GraphState):
-    prompt = f""" You are professional Health assistant Doctor you have 20 years of experience.
-Based on user Profile below provided you have to Generate 10 Question Our system releted to helth we will generate Diet Excercise and skin Care routine Based on user have Provided User So asked user Proper Questions which will Help US to make Personilzed diet Plan.
+    prompt = f"""
+Generate 10 health questions.
 
 Each question must have:
 - question (string)

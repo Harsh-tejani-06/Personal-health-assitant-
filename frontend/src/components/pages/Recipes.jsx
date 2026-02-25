@@ -191,7 +191,7 @@ export default function RecipesStream() {
                 setStreamingText(data.status);
               }
               if (data.chunk) {
-                fullText += data.chunk;
+                fullText += data.chunk + "\n";
                 setStreamingText(fullText);
               }
               if (data.error) {
@@ -648,7 +648,7 @@ export default function RecipesStream() {
                   {streamingText && (
                     <div className="mt-2 p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border border-slate-100 dark:border-slate-600">
                       <p className="text-sm text-slate-600 dark:text-slate-300 font-mono whitespace-pre-wrap">
-                        {streamingText.length > 500 ? streamingText.slice(0, 500) + "..." : streamingText}
+                        {renderBoldText(streamingText.length > 500 ? streamingText.slice(0, 500) + "..." : streamingText)}
                       </p>
                     </div>
                   )}
@@ -761,6 +761,39 @@ export default function RecipesStream() {
   );
 }
 
+// Helper: render markdown bold (**text**) as <strong> tags
+function renderBoldText(text) {
+  if (!text || typeof text !== 'string') return text;
+  // No bold markers at all — return as-is
+  if (!text.includes('**')) return text;
+
+  const result = [];
+  let lastIndex = 0;
+  const regex = /\*\*(.+?)\*\*/g;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      result.push(text.slice(lastIndex, match.index));
+    }
+    // Add the bold text
+    result.push(
+      <strong key={match.index} className="font-semibold text-slate-700 dark:text-slate-200">
+        {match[1]}
+      </strong>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text after last match
+  if (lastIndex < text.length) {
+    result.push(text.slice(lastIndex));
+  }
+
+  return result.length > 0 ? result : text;
+}
+
 // Recipe Card Component
 function RecipeCard({ recipe }) {
   const [expanded, setExpanded] = useState(false);
@@ -811,7 +844,7 @@ function RecipeCard({ recipe }) {
               {ingredients.slice(0, expanded ? undefined : 5).map((ingredient, i) => (
                 <li key={i} className="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2">
                   <span className="w-1.5 h-1.5 bg-[#b89cff] rounded-full mt-2 shrink-0" />
-                  <span>{ingredient}</span>
+                  <span>{renderBoldText(ingredient)}</span>
                 </li>
               ))}
               {!expanded && ingredients.length > 5 && (
@@ -835,7 +868,7 @@ function RecipeCard({ recipe }) {
                   <span className="w-5 h-5 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
                     {i + 1}
                   </span>
-                  <span className="leading-relaxed">{step}</span>
+                  <span className="leading-relaxed">{renderBoldText(step)}</span>
                 </li>
               ))}
               {!expanded && steps.length > 3 && (
@@ -851,7 +884,7 @@ function RecipeCard({ recipe }) {
           <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-100 dark:border-slate-600">
             <p className="text-xs text-slate-600 dark:text-slate-400 italic">
               <span className="font-semibold text-[#b89cff]">Why this recipe: </span>
-              {recipe.reason}
+              {renderBoldText(recipe.reason)}
             </p>
           </div>
         )}
@@ -977,7 +1010,7 @@ function StarredRecipeCard({ item, index = 0, onRemove, onAddToDiet }) {
                 {ingredients.map((ing, i) => (
                   <div key={i} className="flex items-start gap-1.5 py-0.5">
                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full mt-1.5 shrink-0" />
-                    <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{ing}</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{renderBoldText(ing)}</span>
                   </div>
                 ))}
               </div>
@@ -1002,7 +1035,7 @@ function StarredRecipeCard({ item, index = 0, onRemove, onAddToDiet }) {
                     <span className="w-4 h-4 bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0 mt-0.5 z-10 shadow-sm">
                       {i + 1}
                     </span>
-                    <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{step}</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{renderBoldText(step)}</span>
                   </li>
                 ))}
               </ol>
@@ -1015,7 +1048,7 @@ function StarredRecipeCard({ item, index = 0, onRemove, onAddToDiet }) {
               <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#b89cff] to-[#7f2dd0] rounded-full" />
               <p className="text-xs text-slate-600 dark:text-slate-400 italic pl-2">
                 <span className="font-bold text-[#b89cff] not-italic">Why this recipe: </span>
-                {recipe.reason}
+                {renderBoldText(recipe.reason)}
               </p>
             </div>
           )}

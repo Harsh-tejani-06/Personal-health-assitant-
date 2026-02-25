@@ -10,9 +10,8 @@ router = APIRouter()
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ✅ Dynamic base path — works on any machine
-BASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "uploads")
-
+# Base path for uploads - pointing to actual image storage location
+BASE_PATH = r"D:\personal-health\Personal-health-assitant-\backend"
 
 @router.post("/generate")
 async def generate_recipe(
@@ -32,7 +31,7 @@ async def generate_recipe(
     if image_paths:
         try:
             filenames = json.loads(image_paths)
-            full_paths = [os.path.join(UPLOAD_FOLDER, name) for name in filenames]
+            full_paths = [os.path.join(BASE_PATH, name) for name in filenames]
              
             print("[INFO] Received paths:", full_paths)
 

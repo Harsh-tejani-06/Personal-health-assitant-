@@ -216,14 +216,14 @@ export default function Sidebar({ open, setOpen }) {
           <div className={`flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 ${!open && 'justify-center'}`}>
 
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#06b6d4] to-[#10b981] flex items-center justify-center text-white text-xs font-bold">
-              VV
+              HT
             </div>
 
 
             {open && (
               <div className="flex-1 min-w-0">
                 {/* <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{user.displayName || user.fullname}</p> */}
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">Vansh Vanapariya</p>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">Harsh Tejani(Leader)</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Pro Member</p>
               </div>
             )}

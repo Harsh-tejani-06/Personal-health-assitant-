@@ -1,4 +1,5 @@
-from fastapi import APIRouter, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form
+from fastapi.middleware.cors import COR+SMiddleware
 from dotenv import load_dotenv
 import google.generativeai as genai
 from PIL import Image
@@ -13,7 +14,15 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 # Gemini 2.5 Flash
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-router = APIRouter()
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -121,7 +130,7 @@ def generate_recipe(profile, ingredients, previous_recipes, message):
 
 # ---------------- API ENDPOINT ----------------
 
-@router.post("/generate-recipe")
+@app.post("/generate-recipe")
 async def generate_recipe_api(
     user_id: str = Form(...),
     health_profile: str = Form(...),
@@ -172,4 +181,8 @@ async def generate_recipe_api(
             "message": str(e)
         }
 
-# Health check removed - use main app root endpoint
+# ---------------- HEALTH CHECK ----------------
+
+@app.get("/")
+def root():
+    return {"status": "Recipe AI running"}
