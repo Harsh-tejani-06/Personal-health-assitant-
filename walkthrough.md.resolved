@@ -1,0 +1,62 @@
+# Skin Care Module — Walkthrough
+
+## Files Created/Modified
+
+### New Files
+| File | Purpose |
+|------|---------|
+| [SkinCarePlan.js](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/backend/models/SkinCarePlan.js) | Mongoose model: products, AI plan (morning/night routines), daily logs |
+| [skinCareRoutes.js](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/backend/routes/skinCareRoutes.js) | 5 API endpoints + Gemini AI plan generation |
+| [skinCareService.js](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/frontend/src/services/skinCareService.js) | Frontend axios service wrapper |
+| [SkinCare.jsx](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/frontend/src/components/pages/SkinCare.jsx) | Full page component (onboarding → routine → calendar) |
+
+### Modified Files
+| File | Change |
+|------|--------|
+| [index.js](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/backend/index.js) | Added `skinCareRoutes` import and mount |
+
+---
+
+## Features Implemented
+
+### 1. Product Onboarding
+- **18 allopathic** products (cleansers, serums, sunscreens, etc.)
+- **15 homeopathic** products (aloe vera, neem, turmeric, etc.)
+- Custom product input with type/category selection
+- Multi-select with visual selection state
+
+### 2. AI Plan Generation
+- Sends selected products + user health profile to **Gemini 2.0 Flash**
+- Returns structured morning & night routines with step-by-step instructions
+- Includes duration per step and "follow for X days/months" recommendation
+- Personalized tips based on skin type
+
+### 3. Daily Routine View
+- Morning ☀️ / Night 🌙 routine cards with checkboxes
+- Real-time progress bar showing steps completion
+- Day navigation (← →) to view/edit previous days
+- "Update Products" button to re-generate plan
+
+### 4. Calendar & History
+- Monthly calendar grid with day-level completion status (✅ 🟡 —)
+- Click any past day to view and **retroactively edit** its tasks
+- Month navigation
+- Changes persist immediately via API
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/skincare/plan` | Get current products + plan |
+| POST | `/api/skincare/plan` | Save products → generate AI plan |
+| POST | `/api/skincare/log` | Log/update daily task completion |
+| GET | `/api/skincare/log/:date` | Get log for a specific date |
+| GET | `/api/skincare/calendar` | Get last 31 days of logs |
+
+---
+
+## Verification
+
+✅ **Frontend build** succeeded with no compilation errors (`vite build` in 9.42s)

@@ -1,0 +1,139 @@
+# Skin Care Module — Implementation Plan
+
+## Goal
+
+Build a full-featured Skin Care module that lets users:
+1. **Onboard** by selecting their current skincare products (allopathic / homeopathic categories)
+2. **Get an AI-generated daily skincare plan** with a duration (days/months/years)
+3. **View today's routine** as a checklist they can mark done
+4. **Update their products** anytime → triggers a new AI plan
+5. **See a calendar view** of the past month showing completion status per day
+6. **Retroactively update** any past day (e.g., mark yesterday's tasks complete today)
+
+---
+
+## Proposed Changes
+
+### Backend — Mongoose Model
+
+#### [NEW] [SkinCarePlan.js](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/backend/models/SkinCarePlan.js)
+
+Stores the user's selected products, the AI-generated plan, and daily task logs.
+
+```js
+// Key fields:
+{
+  user: ObjectId (ref User),
+  products: [{ name, type: "allopathic"|"homeopathic", category: "cleanser"|"toner"|... }],
+  plan: {
+    routine: {
+      morning: [{ step, product, instruction, duration }],
+      night:   [{ step, product, instruction, duration }]
+    },
+    followFor: String,         // e.g. "30 days", "3 months"
+    tips: [String],
+    generatedAt: Date
+  },
+  dailyLogs: [{
+    date: String ("YYYY-MM-DD"),
+    morningCompleted: [Boolean],  // one per morning step
+    nightCompleted: [Boolean],    // one per night step
+    notes: String
+  }]
+}
+```
+
+One document per user (upserted). The `dailyLogs` array holds up to ~30–60 entries.
+
+---
+
+### Backend — Routes
+
+#### [NEW] [skinCareRoutes.js](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/backend/routes/skinCareRoutes.js)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/skincare/plan` | `GET` | Get user's current plan + products |
+| `/api/skincare/plan` | `POST` | Save selected products → call Gemini AI → store generated plan |
+| `/api/skincare/log` | `POST` | Log/update daily task completion (any date, allows retroactive) |
+| `/api/skincare/log/:date` | `GET` | Get log for a specific date |
+| `/api/skincare/calendar` | `GET` | Get all daily logs for calendar view (last 31 days) |
+
+AI plan generation uses the **Gemini API** (already available via `@google/generative-ai` in the backend, same pattern as chatbot which uses Groq). Will use Gemini directly in the route (same as [aiRoutes.js](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/backend/routes/aiRoutes.js) pattern) rather than proxying to FastAPI, since this is a one-shot generation, not a multi-step graph.
+
+#### [MODIFY] [index.js](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/backend/index.js)
+
+Add: `import skinCareRoutes` and `app.use("/api", skinCareRoutes);`
+
+---
+
+### Frontend — Service Layer
+
+#### [NEW] [skinCareService.js](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/frontend/src/services/skinCareService.js)
+
+Thin axios wrapper (same pattern as [dietService.js](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/frontend/src/services/dietService.js)):
+- `getPlan()` — GET `/skincare/plan`
+- `generatePlan(products)` — POST `/skincare/plan`
+- `logTask(date, data)` — POST `/skincare/log`
+- `getLog(date)` — GET `/skincare/log/:date`
+- `getCalendar()` — GET `/skincare/calendar`
+
+---
+
+### Frontend — Page Component
+
+#### [MODIFY] [SkinCare.jsx](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/frontend/src/components/pages/SkinCare.jsx)
+
+Replace the stub with a full page. The page has **3 states**:
+
+**State 1 — Onboarding (no plan exists)**
+- Show product selection UI with categories:
+  - **Allopathic**: Cleanser, Moisturizer, Sunscreen, Serum, Retinoid, etc.
+  - **Homeopathic**: Aloe Vera Gel, Rose Water, Neem Face Wash, Turmeric Cream, etc.
+- Multi-select from predefined options + "Add Custom" input
+- "Generate My Plan" button → calls API → AI generates routine
+
+**State 2 — Daily Routine View (plan exists)**
+- Morning & Night routine cards with checkboxes per step
+- "Follow for X days/months" badge at top
+- Tips section from AI
+- "Update Products" button → goes back to State 1
+
+**State 3 — Calendar / History View**
+- Monthly calendar grid (current month)
+- Each day cell shows: ✅ (all done), 🟡 (partial), ❌ (nothing), or empty (no data)
+- Click a day → see that day's log, can toggle tasks retroactively
+- Navigate between months (within data range)
+
+All styled with **Tailwind CSS 4 + dark mode** matching the existing Slate/Emerald/Pink palette used in [Activity.jsx](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/frontend/src/components/pages/Activity.jsx) and [Diet.jsx](file:///c:/Users/Dell/Desktop/Mini%20Project/Code/frontend/src/components/pages/Diet.jsx).
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Product List** — I'll include a sensible default list of ~20 allopathic + ~15 homeopathic skincare products. You can review and adjust this list once you see the code.
+
+> [!IMPORTANT]
+> **AI Provider** — I plan to use **Gemini** (already in the backend via `@google/generative-ai`) for plan generation, rather than Groq. Gemini is already configured for this project. Let me know if you prefer Groq instead.
+
+---
+
+## Verification Plan
+
+### Manual Verification (Browser Testing)
+
+Since the project has no automated test suite, verification will be done via browser testing:
+
+1. **Start backend**: `cd backend && node index.js` (needs `.env` with `MONGO_URI`, `GEMINI_API_KEY`)
+2. **Start frontend**: `cd frontend && npm run dev`
+3. **Test flow**:
+   - Login → navigate to `/skin-care`
+   - Verify onboarding UI shows with product categories
+   - Select products → click "Generate Plan"
+   - Verify AI plan loads with morning/night routines
+   - Check/uncheck routine steps → verify persistence
+   - Navigate to calendar view → verify day statuses
+   - Click a past date → verify retroactive editing
+   - Click "Update Products" → verify product re-selection + new plan generation
+   - Toggle dark mode → verify all UI elements look correct

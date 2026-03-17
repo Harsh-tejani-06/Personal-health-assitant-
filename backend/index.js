@@ -1,0 +1,54 @@
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import connectDB from "./config/db.js";
+import profileRoutes from "./routes/profileRoutes.js";
+import aiProxyRoutes from "./routes/aiRoutes.js";
+import recipeRoutes from "./routes/recipeRoutes.js";
+import chatbotRoutes from "./routes/chatbotRoutes.js";
+import dietRoutes from "./routes/dietRoutes.js";
+import activityRoutes from "./routes/activityRoutes.js";
+import gamificationRoutes from "./routes/gamificationRoutes.js";
+import skinCareRoutes from "./routes/skinCareRoutes.js";
+import exerciseRoutes from "./routes/exerciseRoutes.js";
+
+import authRoutes from "./routes/authRoutes.js";
+import path from "path";
+
+// Serve uploads folder
+
+
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
+connectDB();
+
+const app = express();
+
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use(cors());
+app.use(express.json());
+
+app.use("/api/auth", authRoutes);
+app.use("/api", profileRoutes);
+app.use("/api", aiProxyRoutes);
+app.use("/api", recipeRoutes);
+app.use("/api", chatbotRoutes);
+app.use("/api", dietRoutes);
+app.use("/api", activityRoutes);
+app.use("/api", gamificationRoutes);
+app.use("/api", skinCareRoutes);
+app.use("/api", exerciseRoutes);
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.get("/", (req, res) => {
+  res.send("Backend running");
+});
+
+app.listen(5000, () => {
+  console.log("Server running on http://localhost:5000");
+});
