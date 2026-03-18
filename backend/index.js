@@ -9,12 +9,8 @@ import chatbotRoutes from "./routes/chatbotRoutes.js";
 import dietRoutes from "./routes/dietRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
 import gamificationRoutes from "./routes/gamificationRoutes.js";
-<<<<<<< HEAD
 import skinCareRoutes from "./routes/skinCareRoutes.js";
 import exerciseRoutes from "./routes/exerciseRoutes.js";
-=======
->>>>>>> 0884e5206789725b6bc1c532a93f37072bf66acb
-
 import authRoutes from "./routes/authRoutes.js";
 import path from "path";
 
@@ -43,12 +39,8 @@ app.use("/api", chatbotRoutes);
 app.use("/api", dietRoutes);
 app.use("/api", activityRoutes);
 app.use("/api", gamificationRoutes);
-<<<<<<< HEAD
 app.use("/api", skinCareRoutes);
 app.use("/api", exerciseRoutes);
-=======
->>>>>>> 0884e5206789725b6bc1c532a93f37072bf66acb
-
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
