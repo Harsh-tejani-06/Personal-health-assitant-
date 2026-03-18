@@ -195,7 +195,7 @@ export default function AIQuestions() {
                         </div>
 
                         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-3">
-                            Personalized <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#06b6d4] to-[#10b981]">Health Questions</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#06b6d4] to-[#10b981]">Personalized Health Questions</span>
                         </h2>
                         <p className="text-slate-600 max-w-lg mx-auto">
                             Answer these 10 questions to help our AI create your customized wellness plan

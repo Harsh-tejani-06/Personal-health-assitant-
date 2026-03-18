@@ -108,6 +108,52 @@ export default function Sidebar({ open, setOpen }) {
               </div>
             </div>
           )}
+
+          {/* Time Display */}
+          {/* {open && (
+            <div className="text-center py-2 border-t border-slate-100 dark:border-slate-800">
+              <p className="text-xs text-slate-400 dark:text-slate-500">Current Time</p>
+              <p className="text-lg font-bold text-slate-700 dark:text-slate-200 font-mono">{currentTime}</p>
+            </div>
+          )} */}
+
+          {/* Logout Button */}
+          <div className={`${!open ? 'flex justify-center' : ''}`}>
+            <button
+              onClick={logoutUser}
+              className={`group relative flex items-center gap-3 w-full px-3 py-3 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-300 ${!open && 'justify-center'}`}
+              title={!open ? 'Logout' : ''}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              {open && <span className="text-sm font-medium">Logout</span>}
+              {!open && (
+                <div className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                  Logout
+                </div>
+              )}
+            </button>
+          </div>
+
+          {/* User Mini Profile */}
+          <div className={`flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 ${!open && 'justify-center'}`}>
+
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#06b6d4] to-[#10b981] flex items-center justify-center text-white text-xs font-bold">
+              VV
+            </div>
+
+
+            {open && (
+              <div className="flex-1 min-w-0">
+                {/* <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{user.displayName || user.fullname}</p> */}
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">Vansh Vanapariya</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Pro Member</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

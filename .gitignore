@@ -32,5 +32,14 @@ backend/uploads
 node_modules/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 backend/uploads/
+
+# Virtual Environment
+Ai-task/venv/
+
+# Environment files
+.env
+**/.env
