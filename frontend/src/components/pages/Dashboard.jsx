@@ -6,21 +6,70 @@ import {
 } from "recharts";
 import { useState, useEffect } from "react";
 import { updateUserProfile } from "../../services/profileService";
-import { getActivity, logActivity } from "../../services/activityService";
+import { getActivity, logActivity, getActivityHistory } from "../../services/activityService";
+import { getMyPoints } from "../../services/gamificationService";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function Dashboard() {
+  const { theme, toggleTheme } = useTheme();
+
+  const logoutUser = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/auth";
+  };
+
   const [greeting, setGreeting] = useState("Good morning");
   const [currentDate, setCurrentDate] = useState("");
   const [currentTime, setCurrentTime] = useState("");
   const [waterIntake, setWaterIntake] = useState(0);
+  const [activityData, setActivityData] = useState(null);
+  const [habitData, setHabitData] = useState([]);
+  const [dynamicMonthlyHabits, setDynamicMonthlyHabits] = useState({});
 
   useEffect(() => {
     const fetchActivity = async () => {
       try {
-        const today = new Date().toISOString().split('T')[0];
-        const activity = await getActivity(today);
-        if (activity && activity.water) {
-          setWaterIntake(activity.water.amount || 0);
+        const todayStr = new Date().toISOString().split('T')[0];
+        const [activity, historyRes] = await Promise.all([
+          getActivity(todayStr),
+          getActivityHistory().catch(() => ({ activities: [] }))
+        ]);
+        
+        if (activity) {
+          setActivityData(activity);
+          if (activity.water) {
+            setWaterIntake(activity.water.amount || 0);
+          }
+        }
+
+        if (historyRes && historyRes.activities) {
+          const last7Days = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+            
+            const dayAct = historyRes.activities.find(a => a.date === dateStr);
+            last7Days.push({
+              day: dayName,
+              exercise: dayAct?.exercise?.completed ? 1 : 0,
+              diet: dayAct?.diet?.completed ? 1 : 0,
+              skincare: dayAct?.skinCare?.completed ? 1 : 0,
+              water: dayAct?.water?.amount || 0,
+            });
+          }
+          setHabitData(last7Days);
+
+          const newMonthlyHabits = {};
+          historyRes.activities.forEach(act => {
+            newMonthlyHabits[act.date] = {
+              exercise: act.exercise?.completed ? 1 : 0,
+              diet: act.diet?.completed ? 1 : 0,
+              skincare: act.skinCare?.completed ? 1 : 0,
+            };
+          });
+          setDynamicMonthlyHabits(newMonthlyHabits);
         }
       } catch (error) {
         console.error("Failed to fetch activity:", error);
@@ -55,6 +104,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
+  const [showPlan, setShowPlan] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
 
@@ -74,11 +124,14 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/profile", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const [res, pointsData] = await Promise.all([
+          fetch("http://localhost:5000/api/profile", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+          getMyPoints().catch(() => null)
+        ]);
         const data = await res.json();
 
         if (res.ok) {
@@ -88,7 +141,8 @@ export default function Dashboard() {
             height: data.healthProfile?.height || 0,
             weight: data.healthProfile?.weight || 0,
             goal: data.healthProfile?.primaryGoal?.replace("_", " ") || "Stay Fit",
-            streak: 12,
+            streak: pointsData ? pointsData.currentStreak : 0,
+            points: pointsData ? pointsData.totalPoints : 0,
             avatar: data.avatar ? `http://localhost:5000${data.avatar}` : "/user.png"
           });
           setEditedName(data.displayName || data.fullname || "User");
@@ -138,45 +192,115 @@ export default function Dashboard() {
   const bmiStatus = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese";
   const bmiColor = bmi < 18.5 ? "#f59e0b" : bmi < 25 ? "#10b981" : bmi < 30 ? "#f97316" : "#ef4444";
 
-  const habitData = [
-    { day: "Mon", exercise: 1, diet: 1, skincare: 0, water: 2.5 },
-    { day: "Tue", exercise: 1, diet: 0, skincare: 1, water: 3.0 },
-    { day: "Wed", exercise: 0, diet: 1, skincare: 1, water: 2.0 },
-    { day: "Thu", exercise: 1, diet: 1, skincare: 1, water: 2.8 },
-    { day: "Fri", exercise: 0, diet: 1, skincare: 0, water: 1.5 },
-    { day: "Sat", exercise: 1, diet: 1, skincare: 1, water: 3.2 },
-    { day: "Sun", exercise: 1, diet: 0, skincare: 1, water: 2.6 }
-  ];
-
   const today = {
-    Exercise: "Done",
-    Diet: "Done",
-    SkinCare: "Pending",
-    Water: "2.5L"
+    Exercise: activityData?.exercise?.completed ? "Done" : "Pending",
+    Diet: activityData?.diet?.completed ? "Done" : "Pending",
+    SkinCare: activityData?.skinCare?.completed ? "Done" : "Pending",
+    Water: waterIntake > 0 ? `${waterIntake}L` : "0L",
   };
 
-  const monthlyHabits = {
-    "2026-02-01": { exercise: 1, diet: 1, skincare: 1 },
-    "2026-02-02": { exercise: 1, diet: 0, skincare: 1 },
-    "2026-02-03": { exercise: 0, diet: 0, skincare: 0 },
-    "2026-02-04": { exercise: 1, diet: 1, skincare: 1 },
-    "2026-02-05": { exercise: 1, diet: 1, skincare: 0 },
-    "2026-02-06": { exercise: 0, diet: 0, skincare: 0 },
-    "2026-02-07": { exercise: 1, diet: 1, skincare: 1 }
-  };
+  const completedHabitsCount = [
+    today.Exercise === "Done",
+    today.Diet === "Done",
+    today.SkinCare === "Done",
+    waterIntake >= 3
+  ].filter(Boolean).length;
+
+  const habitPercent = Math.round((completedHabitsCount / 4) * 100);
+
+  let insightText = "";
+  if (completedHabitsCount === 0) {
+    insightText = "You haven't started your habits yet today. Let's get moving!";
+  } else if (completedHabitsCount === 4) {
+    insightText = "Amazing job! You've completed all your habits for today. Keep up the great work!";
+  } else {
+    let pending = "";
+    if (today.Exercise !== "Done") pending = "exercise routine";
+    else if (today.Diet !== "Done") pending = "healthy diet";
+    else if (today.SkinCare !== "Done") pending = "skincare routine";
+    else if (waterIntake < 3) pending = "water intake goal";
+
+    insightText = `You've completed ${habitPercent}% of today's habits. Finish strong with your ${pending}!`;
+  }
+
+
+
+  const weeklyStats = habitData.reduce((acc, curr) => {
+    acc.exercise += curr.exercise || 0;
+    acc.diet += curr.diet || 0;
+    acc.skincare += curr.skincare || 0;
+    // Assuming 2.0L or 3.0L is goal: let's use the logic from earlier: curr.water >= 2.0 or 3.0. Water goal is tracked.
+    acc.water += curr.water >= 2.0 ? 1 : 0; 
+    return acc;
+  }, { exercise: 0, diet: 0, skincare: 0, water: 0 });
+
+  const exercisePercent = Math.round((weeklyStats.exercise / 7) * 100) || 0;
+  const dietPercent = Math.round((weeklyStats.diet / 7) * 100) || 0;
+  const skincarePercent = Math.round((weeklyStats.skincare / 7) * 100) || 0;
+
+  const totalPossible = 7 * 4; // 4 habits a day
+  const totalCompleted = weeklyStats.exercise + weeklyStats.diet + weeklyStats.skincare + weeklyStats.water;
+  const overallPercent = Math.round((totalCompleted / totalPossible) * 100) || 0;
 
   const weeklyProgress = [
-    { name: "Completed", value: 75, color: "#b89cff" },
-    { name: "Remaining", value: 25, color: "#e2e8f0" }
+    { name: "Completed", value: overallPercent, color: "#b89cff" },
+    { name: "Remaining", value: Math.max(0, 100 - overallPercent), color: "#e2e8f0" }
   ];
 
-  const longestStreak = calculateLongestStreak(monthlyHabits);
+  const longestStreak = calculateLongestStreak(dynamicMonthlyHabits);
+
+  let recommendedFocus = "consistency";
+  let focusDesc = "You are doing amazing! Keep maintaining your current routines to stay on top.";
+  let focusPlan = [
+    "Reflect on what's working well for you right now.",
+    "Try setting a new, slightly harder milestone for a particular habit.",
+    "Enjoy the results of your hard work and take a moment to be proud."
+  ];
+
+  // Determine weakest link based on weekly stats to suggest focus
+  if (waterIntake < 2.5) {
+     recommendedFocus = "hydration";
+     focusDesc = "You're running low on water intake. Aim for at least 3 liters today.";
+     focusPlan = [
+       "Morning: Drink a full glass of water immediately upon waking up.",
+       "Throughout the Day: Carry a reusable water bottle wherever you go.",
+       "Hack: Drink a glass of water 30 minutes before each meal.",
+       "Reminder: Set hourly reminders on your phone if you keep forgetting."
+     ];
+  } else if (exercisePercent <= Math.min(dietPercent, skincarePercent) && exercisePercent < 100) {
+     recommendedFocus = "exercise";
+     focusDesc = "Your activity consistency could use a boost this week. Let's get moving!";
+     focusPlan = [
+       "Warmup: Start with a 10-minute dynamic stretching routine.",
+       "Cardio: Take a brisk 20-minute walk after lunch or dinner.",
+       "Strength: Do 3 sets of 15 bodyweight squats and 10 push-ups.",
+       "Cooldown: Try a quick home yoga session before bed to relax."
+     ];
+  } else if (dietPercent <= Math.min(exercisePercent, skincarePercent) && dietPercent < 100) {
+     recommendedFocus = "diet";
+     focusDesc = "Let's focus on healthy eating. Make mindful food choices today!";
+     focusPlan = [
+       "Greens: Include at least one full serving of vegetables with every main meal.",
+       "Snacking: Swap out processed sugary snacks for mixed nuts or fresh fruit.",
+       "Protein: Ensure you are eating adequate lean proteins to stay satiated.",
+       "Prep: Plan your major meals for tomorrow tonight so you aren't tempted to order takeout."
+     ];
+  } else if (skincarePercent < 100) {
+     recommendedFocus = "skincare";
+     focusDesc = "Don't forget your skin! A consistent routine makes a massive difference.";
+     focusPlan = [
+       "Step 1: Cleanse your face thoroughly both morning and night.",
+       "Step 2: Apply a hydrating serum while your skin is still slightly damp.",
+       "Step 3: Never skip your moisturizer to lock in hydration.",
+       "Step 4: Protect with SPF. Always apply broad-spectrum sunscreen during the day."
+     ];
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-transparent text-slate-800 dark:text-slate-200 p-4 md:p-6 lg:p-8 relative overflow-hidden transition-colors duration-300">
 
       {/* Subtle background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#f0f9ff] via-[#f8fafc] to-[#f0fdf4] dark:from-transparent dark:via-transparent dark:to-transparent pointer-events-none" />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-[#f0f9ff] via-[#f8fafc] to-[#f0fdf4] dark:from-transparent dark:via-transparent dark:to-transparent pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto space-y-6">
 
@@ -216,9 +340,11 @@ export default function Dashboard() {
               )}
             </h1>
           </div>
-          <div className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-2xl px-4 py-2 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="w-3 h-3 bg-[#10b981] rounded-full animate-pulse" />
-            <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">All systems active</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-2xl px-4 py-2 border border-slate-200 dark:border-slate-700 shadow-sm hidden md:flex">
+              <div className="w-3 h-3 bg-[#10b981] rounded-full animate-pulse" />
+              <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">All systems active</span>
+            </div>
           </div>
         </div>
 
@@ -294,7 +420,7 @@ export default function Dashboard() {
             </div>
 
             <div className="space-y-3">
-              <LightActivityRow label="Morning Exercise" value={today.Exercise} time="7:00 AM" icon="🏃" />
+              <LightActivityRow label="Exercise" value={today.Exercise} time="7:00 AM" icon="🏃" />
               <LightActivityRow label="Healthy Diet" value={today.Diet} time="12:30 PM" icon="🥗" />
               <LightActivityRow label="Skin Care Routine" value={today.SkinCare} time="9:00 PM" icon="✨" />
               <LightActivityRow label="Water Intake" value={today.Water} time="Ongoing" icon="💧" />
@@ -306,7 +432,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-sm font-semibold text-slate-800 dark:text-white mb-1">Daily Insight</p>
                   <p className="text-xs text-slate-600 dark:text-slate-400">
-                    You've completed 75% of today's habits. Finish strong with your skincare routine!
+                    {insightText}
                   </p>
                 </div>
               </div>
@@ -437,29 +563,29 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <LightQuickStatCard
             title="Weekly Exercise"
-            value="5/7 days"
-            subtitle="71% consistency"
+            value={`${weeklyStats.exercise}/7 days`}
+            subtitle={`${exercisePercent}% consistency`}
             icon="🏃"
             color="#b89cff"
-            progress={71}
+            progress={exercisePercent}
           />
 
           <LightQuickStatCard
             title="Diet Adherence"
-            value="85%"
-            subtitle="Great job!"
+            value={`${dietPercent}%`}
+            subtitle={dietPercent >= 80 ? "Great job!" : dietPercent >= 50 ? "Keep trying!" : "Needs work"}
             icon="🥗"
             color="#10b981"
-            progress={85}
+            progress={dietPercent}
           />
 
           <LightQuickStatCard
             title="Skin Care Routine"
-            value="6/7 days"
-            subtitle="86% consistency"
+            value={`${weeklyStats.skincare}/7 days`}
+            subtitle={`${skincarePercent}% consistency`}
             icon="✨"
             color="#38bdf8"
-            progress={86}
+            progress={skincarePercent}
           />
 
           <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 flex items-center gap-4 transition-colors">
@@ -482,13 +608,14 @@ export default function Dashboard() {
                 </Pie>
               </PieChart>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-slate-800 dark:text-white">75%</span>
+                <span className="text-lg font-bold text-slate-800 dark:text-white">{overallPercent}%</span>
               </div>
             </div>
             <div>
               <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Weekly Goal</p>
-              <p className="text-2xl font-bold text-slate-800 dark:text-white">On Track</p>
-              <p className="text-xs text-[#b89cff] font-medium">+5% from last week</p>
+              <p className="text-2xl font-bold text-slate-800 dark:text-white">
+                {overallPercent >= 75 ? "On Track" : overallPercent >= 50 ? "Almost there" : "Needs Focus"}
+              </p>
             </div>
           </div>
         </div>
@@ -512,7 +639,7 @@ export default function Dashboard() {
 
           <div className="lg:col-span-2 h-full">
             <StreakCalendar
-              habits={monthlyHabits}
+              habits={dynamicMonthlyHabits}
               currentStreak={user.streak}
               longestStreak={longestStreak}
             />
@@ -521,18 +648,20 @@ export default function Dashboard() {
 
         {/* Health Tip */}
         <div className="bg-gradient-to-r from-[#b89cff]/10 via-[#f0f9ff] to-[#b89cff]/10 dark:from-[#b89cff]/20 dark:via-slate-800/50 dark:to-[#b89cff]/20 rounded-2xl p-6 border border-[#b89cff]/20">
-          <div className="flex items-start gap-4">
+          <div className="flex flex-col sm:flex-row items-start gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] rounded-xl flex items-center justify-center text-white text-2xl shrink-0">
               🎯
             </div>
             <div className="flex-1">
-              <h4 className="font-bold text-slate-800 dark:text-white mb-1">Today's Health Focus</h4>
+              <h4 className="font-bold text-slate-800 dark:text-white mb-1">Today's Health Focus: <span className="capitalize">{recommendedFocus}</span></h4>
               <p className="text-slate-600 dark:text-slate-400 text-sm">
-                Based on your profile, we recommend focusing on <span className="font-semibold text-[#b89cff]">hydration</span> today.
-                Aim for 3 liters of water to support your fitness goals and skin health.
+                {focusDesc}
               </p>
             </div>
-            <button className="px-4 py-2 bg-[#b89cff] text-white font-medium rounded-lg hover:bg-[#a78bfa] transition-all text-sm whitespace-nowrap shadow-lg shadow-[#b89cff]/25">
+            <button
+              onClick={() => setShowPlan(true)}
+              className="mt-4 sm:mt-0 px-5 py-2.5 bg-[#b89cff] text-white font-medium rounded-lg hover:bg-[#a78bfa] transition-all text-sm whitespace-nowrap shadow-lg shadow-[#b89cff]/25 cursor-pointer active:scale-95"
+            >
               View Plan
             </button>
           </div>
@@ -545,7 +674,7 @@ export default function Dashboard() {
           <div className="relative bg-white dark:bg-slate-800 rounded-3xl p-2 max-w-sm w-full shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowPreview(false)}
-              className="absolute top-4 right-4 z-10 w-8 h-8 bg-black/20 hover:bg-black/40 rounded-full text-white flex items-center justify-center transition-colors"
+              className="absolute top-4 right-4 z-10 w-8 h-8 bg-black/20 hover:bg-black/40 rounded-full text-white flex items-center justify-center transition-colors cursor-pointer"
             >
               ✕
             </button>
@@ -573,6 +702,58 @@ export default function Dashboard() {
                 />
               </label>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Focus Plan Modal */}
+      {showPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowPlan(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl relative border border-slate-100 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#b89cff]/20 rounded-xl flex items-center justify-center text-xl">
+                  🎯
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white capitalize">{recommendedFocus} Action Plan</h3>
+              </div>
+              <button
+                onClick={() => setShowPlan(false)}
+                className="w-8 h-8 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4">
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-6 bg-[#f0f9ff] dark:bg-slate-700/50 p-3 rounded-lg border border-[#bae6fd] dark:border-slate-600">
+                {focusDesc}
+              </p>
+              
+              <ul className="space-y-4">
+                {focusPlan.map((step, idx) => {
+                  return (
+                    <li key={idx} className="flex gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700 group transition-all hover:shadow-md hover:border-[#b89cff]/30">
+                      <div className="w-8 h-8 rounded-full bg-[#b89cff]/10 text-[#b89cff] font-bold flex items-center justify-center shrink-0 border border-[#b89cff]/20">
+                        {idx + 1}
+                      </div>
+                      <span className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed pt-1">
+                        {step}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+
+            <button
+               onClick={() => setShowPlan(false)}
+               className="w-full mt-8 py-3.5 bg-gradient-to-r from-[#b89cff] to-[#7f2dd0] text-white font-bold rounded-xl shadow-lg shadow-[#b89cff]/30 hover:-translate-y-0.5 transition-all cursor-pointer"
+            >
+              Let's Do It!
+            </button>
           </div>
         </div>
       )}
@@ -737,7 +918,7 @@ function WaterTracker({ current, goal, onAdd, onReduce }) {
 /* ================= STREAK CALENDAR ================= */
 
 function StreakCalendar({ habits, longestStreak }) {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 1, 1));
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();

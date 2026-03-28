@@ -14,6 +14,12 @@ export const getChatHistory = async (date) => {
     return res.data;
 };
 
+// Delete messages for a specific date
+export const deleteChatHistory = async (date) => {
+    const res = await API.delete(`/chat/history/${date}`);
+    return res.data;
+};
+
 // Send message with streaming (returns a reader for SSE)
 export const sendMessageStream = async (message) => {
     const token = localStorage.getItem("token");

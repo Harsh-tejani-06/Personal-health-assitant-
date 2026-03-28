@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
+import { isLoggedIn } from "../services/authService";
 
 export default function GetStarted() {
   const navigate = useNavigate();
@@ -88,7 +89,13 @@ export default function GetStarted() {
           {/* CTA Section */}
           <div className="mt-10 md:mt-12 flex flex-col items-center gap-4">
             <button
-              onClick={() => navigate("/auth")}
+              onClick={() => {
+                if (isLoggedIn()) {
+                  navigate("/dashboard");
+                } else {
+                  navigate("/auth");
+                }
+              }}
               className="group relative w-full sm:w-auto px-8 md:px-12 py-4 bg-gradient-to-r from-[#06b6d4] to-[#0891b2] text-white font-bold text-lg rounded-full shadow-lg shadow-[#06b6d4]/25 transition-all duration-300 hover:shadow-xl hover:shadow-[#06b6d4]/30 hover:-translate-y-1 active:translate-y-0 overflow-hidden"
             >
               <span className="relative z-10 cursor-pointer flex items-center justify-center gap-2">

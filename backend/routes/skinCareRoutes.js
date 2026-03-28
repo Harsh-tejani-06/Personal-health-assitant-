@@ -3,6 +3,8 @@ import Groq from "groq-sdk";
 import { protect } from "../middleware/authMiddleware.js";
 import User from "../models/User.js";
 import SkinCarePlan from "../models/SkinCarePlan.js";
+import DailyActivity from "../models/DailyActivity.js";
+import { calculatePoints } from "../utils/gamification.js";
 
 const router = express.Router();
 
@@ -197,9 +199,31 @@ router.post("/skincare/log", protect, async (req, res) => {
 
         await plan.save();
 
+        // ---- Sync to DailyActivity ----
+        const mornTotal = plan.plan.morning?.length || 0;
+        const nightTotal = plan.plan.night?.length || 0;
+        const totalSteps = mornTotal + nightTotal;
+        const mornDone = morningCompleted ? morningCompleted.filter(Boolean).length : 0;
+        const nightDone = nightCompleted ? nightCompleted.filter(Boolean).length : 0;
+        const totalDone = mornDone + nightDone;
+        const isComplete = totalSteps > 0 && totalDone === totalSteps;
+
+        let activity = await DailyActivity.findOne({ user: userId, date: targetDate });
+        if (!activity) {
+            activity = new DailyActivity({ user: userId, date: targetDate });
+        }
+        
+        activity.skinCare.completed = isComplete;
+        activity.skinCare.details = "Synced from Skin Care Plan";
+        
+        await activity.save();
+        const pointsData = await calculatePoints(userId, activity);
+        // -------------------------------
+
         res.json({
             success: true,
-            log: logEntry
+            log: logEntry,
+            points: pointsData
         });
 
     } catch (err) {

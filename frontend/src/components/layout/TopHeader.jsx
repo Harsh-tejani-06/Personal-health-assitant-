@@ -36,11 +36,11 @@ export default function TopHeader() {
 
   const initials = user
     ? (user.displayName || user.fullname)
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : "U";
 
   return (
@@ -75,21 +75,19 @@ export default function TopHeader() {
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 overflow-hidden"
+          className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 overflow-hidden cursor-pointer"
           aria-label="Toggle theme"
           title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
         >
           <div
-            className={`absolute inset-0 rounded-xl transition-all duration-500 ${
-              theme === "dark"
-                ? "bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30"
-                : "bg-gradient-to-br from-amber-400/20 to-orange-400/20 border border-amber-400/30"
-            }`}
+            className={`absolute inset-0 rounded-xl transition-all duration-500 ${theme === "dark"
+              ? "bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30"
+              : "bg-gradient-to-br from-amber-400/20 to-orange-400/20 border border-amber-400/30"
+              }`}
           />
           <div
-            className={`relative transition-all duration-500 ${
-              theme === "dark" ? "rotate-0" : "rotate-180"
-            }`}
+            className={`relative transition-all duration-500 ${theme === "dark" ? "rotate-0" : "rotate-180"
+              }`}
           >
             {theme === "dark" ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -115,7 +113,7 @@ export default function TopHeader() {
         {/* Logout Button */}
         <button
           onClick={logoutUser}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 group"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 group cursor-pointer"
           title="Logout"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"

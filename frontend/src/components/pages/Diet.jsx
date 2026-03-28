@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { getDietDates, getDiet, removeFromDiet } from "../../services/dietService";
+import { logActivity, getActivity } from "../../services/activityService";
 import CalendarView from "../shared/CalendarView";
 
 // -------- Icons --------
@@ -55,9 +56,44 @@ export default function Diet() {
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [selectedRecipe, setSelectedRecipe] = useState(null);
     const [showCalendar, setShowCalendar] = useState(false);
+    const [isDietCompleted, setIsDietCompleted] = useState(false);
+    const [savingCompletion, setSavingCompletion] = useState(false);
 
     useEffect(() => { loadDates(); }, []);
-    useEffect(() => { loadDiet(selectedDate); }, [selectedDate]);
+    useEffect(() => { 
+        loadDiet(selectedDate);
+        loadCompletionStatus(selectedDate);
+    }, [selectedDate]);
+
+    async function loadCompletionStatus(date) {
+        try {
+            const activity = await getActivity(date);
+            if (activity && activity.diet) {
+                setIsDietCompleted(activity.diet.completed);
+            } else {
+                setIsDietCompleted(false);
+            }
+        } catch (err) {
+            setIsDietCompleted(false);
+        }
+    }
+
+    async function handleMarkCompleted() {
+        setSavingCompletion(true);
+        const newState = !isDietCompleted;
+        try {
+            await logActivity(selectedDate, "diet", newState, "Marked from Diet Plan");
+            setIsDietCompleted(newState);
+            setDeleteMsg(newState ? "Diet marked as complete!" : "Diet marked as incomplete.");
+            setTimeout(() => setDeleteMsg(null), 2000);
+        } catch (err) {
+            console.error("Failed to mark diet completed:", err);
+            setDeleteMsg("Failed to update status.");
+            setTimeout(() => setDeleteMsg(null), 2000);
+        } finally {
+            setSavingCompletion(false);
+        }
+    }
 
     async function loadDates() {
         try {
@@ -266,6 +302,21 @@ export default function Diet() {
                                             <p className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-bold">Night</p>
                                         </div>
                                     </div>
+
+                                    {(diet.morning.length > 0 && diet.afternoon.length > 0 && diet.night.length > 0) && (
+                                        <button
+                                            onClick={handleMarkCompleted}
+                                            disabled={savingCompletion}
+                                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
+                                                isDietCompleted 
+                                                ? 'bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-700' 
+                                                : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-400 dark:border-indigo-700'
+                                            } ${savingCompletion ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            title={isDietCompleted ? "Mark Incomplete" : "Mark Completed"}
+                                        >
+                                            {savingCompletion ? "..." : isDietCompleted ? "✅ Completed" : "✓ Mark Done"}
+                                        </button>
+                                    )}
 
                                     <button
                                         onClick={() => setShowCalendar(true)}

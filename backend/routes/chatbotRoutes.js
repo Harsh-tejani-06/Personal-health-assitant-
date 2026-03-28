@@ -207,4 +207,33 @@ router.get("/chat/history/:date", protect, async (req, res) => {
     }
 });
 
+// =================================================
+// 4. DELETE /api/chat/history/:date — Delete messages for a specific date
+// =================================================
+router.delete("/chat/history/:date", protect, async (req, res) => {
+    try {
+        const { date } = req.params;
+
+        // Validate date format
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD" });
+        }
+
+        const chat = await HealthChat.findOneAndDelete({
+            user: req.user._id,
+            date: date
+        });
+
+        if (!chat) {
+            return res.status(404).json({ message: "Chat not found for this date" });
+        }
+
+        res.json({ message: "Chat history deleted successfully" });
+
+    } catch (err) {
+        console.error("Delete chat history error:", err);
+        res.status(500).json({ message: "Failed to delete chat history" });
+    }
+});
+
 export default router;

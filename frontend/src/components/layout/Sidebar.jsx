@@ -1,8 +1,38 @@
 import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { getActivity } from "../../services/activityService";
 
 export default function Sidebar({ open, setOpen }) {
   const location = useLocation();
-  const progress = 67;
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const activity = await getActivity(todayStr);
+        if (activity) {
+          const completedHabitsCount = [
+            activity.exercise?.completed,
+            activity.diet?.completed,
+            activity.skinCare?.completed,
+            (activity.water?.amount || 0) >= 2.5 // Assuming 2.5L is goal
+          ].filter(Boolean).length;
+          
+          setProgress(Math.round((completedHabitsCount / 4) * 100));
+        }
+      } catch (error) {
+        console.error("Failed to fetch sidebar progress:", error);
+      }
+    };
+    fetchProgress();
+  }, []);
+
+  const logoutUser = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/auth"; // Redirect to auth page after logout
+  };
+
 
   const menu = [
     { name: "Dashboard", path: "/dashboard", icon: "📊", color: "from-[#06b6d4] to-[#0891b2]" },

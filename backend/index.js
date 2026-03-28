@@ -11,6 +11,7 @@ import activityRoutes from "./routes/activityRoutes.js";
 import gamificationRoutes from "./routes/gamificationRoutes.js";
 import skinCareRoutes from "./routes/skinCareRoutes.js";
 import exerciseRoutes from "./routes/exerciseRoutes.js";
+
 import authRoutes from "./routes/authRoutes.js";
 import path from "path";
 
@@ -41,6 +42,7 @@ app.use("/api", activityRoutes);
 app.use("/api", gamificationRoutes);
 app.use("/api", skinCareRoutes);
 app.use("/api", exerciseRoutes);
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {

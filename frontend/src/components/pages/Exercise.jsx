@@ -400,7 +400,7 @@ export default function Exercise() {
         <button
           onClick={handleGenerate}
           disabled={generating}
-          className={`w-full py-4 rounded-2xl font-bold text-lg transition-all ${generating
+          className={`w-full py-4 rounded-2xl font-bold text-lg transition-all cursor-pointer ${generating
             ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
             : "bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white shadow-xl shadow-blue-200 dark:shadow-blue-900/30 hover:shadow-2xl hover:scale-[1.01] active:scale-[0.99]"
             }`}

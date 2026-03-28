@@ -376,7 +376,7 @@ export default function SkinCare() {
 
       {/* Generate Button */}
       <button onClick={handleGenerate} disabled={selectedProducts.length === 0 || generating}
-        className={`w-full py-4 rounded-2xl font-bold text-lg transition-all ${selectedProducts.length === 0 || generating
+        className={`w-full py-4 rounded-2xl font-bold text-lg transition-all cursor-pointer ${selectedProducts.length === 0 || generating
           ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
           : "bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-500 text-white shadow-xl shadow-pink-200 dark:shadow-pink-900/30 hover:shadow-2xl hover:scale-[1.01] active:scale-[0.99]"}`}>
         {generating ? (<span className="flex items-center justify-center gap-3"><span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />AI is generating your plan...</span>) : `✨ Generate My Skincare Plan (${selectedProducts.length} products)`}
