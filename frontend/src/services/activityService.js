@@ -3,6 +3,7 @@ import API from "../api/axios";
 // Log or update daily activity
 export const logActivity = async (date, type, completed, details = "", duration = 0) => {
     const res = await API.post("/activity/log", { date, type, completed, details, duration });
+    window.dispatchEvent(new Event('activityUpdated'));
     return res.data;
 };
 

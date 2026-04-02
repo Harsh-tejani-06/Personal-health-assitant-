@@ -30,6 +30,11 @@ export const getOnboardingStatus = async () => {
   return res.data;
 };
 
+export const getUserProfile = async () => {
+  const res = await API.get("/profile");
+  return res.data;
+};
+
 export const updateUserProfile = async (data) => {
   const res = await API.put("/profile", data);
   return res.data;

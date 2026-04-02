@@ -44,7 +44,7 @@ export default function TopHeader() {
     : "U";
 
   return (
-    <div className="relative flex items-center justify-between h-16 px-4 md:px-6 lg:px-8">
+    <div className="relative z-50 flex items-center justify-between h-16 px-4 md:px-6 lg:px-8 bg-white/80 dark:bg-transparent backdrop-blur-sm border-b border-slate-100 dark:border-transparent">
 
       {/* LEFT SIDE — User Profile (name + membership) & Theme Toggle */}
       <div className="flex items-center gap-4">
@@ -65,7 +65,6 @@ export default function TopHeader() {
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-tight">
               {user?.displayName || user?.fullname || "User"}
             </p>
-            <p className="text-[11px] text-[#06b6d4] font-medium">Pro Member ✨</p>
           </div>
         </div>
       </div>

@@ -34,7 +34,7 @@ export default function Dashboard() {
           getActivity(todayStr),
           getActivityHistory().catch(() => ({ activities: [] }))
         ]);
-        
+
         if (activity) {
           setActivityData(activity);
           if (activity.water) {
@@ -49,7 +49,7 @@ export default function Dashboard() {
             d.setDate(d.getDate() - i);
             const dateStr = d.toISOString().split('T')[0];
             const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-            
+
             const dayAct = historyRes.activities.find(a => a.date === dateStr);
             last7Days.push({
               day: dayName,
@@ -230,7 +230,7 @@ export default function Dashboard() {
     acc.diet += curr.diet || 0;
     acc.skincare += curr.skincare || 0;
     // Assuming 2.0L or 3.0L is goal: let's use the logic from earlier: curr.water >= 2.0 or 3.0. Water goal is tracked.
-    acc.water += curr.water >= 2.0 ? 1 : 0; 
+    acc.water += curr.water >= 2.0 ? 1 : 0;
     return acc;
   }, { exercise: 0, diet: 0, skincare: 0, water: 0 });
 
@@ -259,41 +259,41 @@ export default function Dashboard() {
 
   // Determine weakest link based on weekly stats to suggest focus
   if (waterIntake < 2.5) {
-     recommendedFocus = "hydration";
-     focusDesc = "You're running low on water intake. Aim for at least 3 liters today.";
-     focusPlan = [
-       "Morning: Drink a full glass of water immediately upon waking up.",
-       "Throughout the Day: Carry a reusable water bottle wherever you go.",
-       "Hack: Drink a glass of water 30 minutes before each meal.",
-       "Reminder: Set hourly reminders on your phone if you keep forgetting."
-     ];
+    recommendedFocus = "hydration";
+    focusDesc = "You're running low on water intake. Aim for at least 3 liters today.";
+    focusPlan = [
+      "Morning: Drink a full glass of water immediately upon waking up.",
+      "Throughout the Day: Carry a reusable water bottle wherever you go.",
+      "Hack: Drink a glass of water 30 minutes before each meal.",
+      "Reminder: Set hourly reminders on your phone if you keep forgetting."
+    ];
   } else if (exercisePercent <= Math.min(dietPercent, skincarePercent) && exercisePercent < 100) {
-     recommendedFocus = "exercise";
-     focusDesc = "Your activity consistency could use a boost this week. Let's get moving!";
-     focusPlan = [
-       "Warmup: Start with a 10-minute dynamic stretching routine.",
-       "Cardio: Take a brisk 20-minute walk after lunch or dinner.",
-       "Strength: Do 3 sets of 15 bodyweight squats and 10 push-ups.",
-       "Cooldown: Try a quick home yoga session before bed to relax."
-     ];
+    recommendedFocus = "exercise";
+    focusDesc = "Your activity consistency could use a boost this week. Let's get moving!";
+    focusPlan = [
+      "Warmup: Start with a 10-minute dynamic stretching routine.",
+      "Cardio: Take a brisk 20-minute walk after lunch or dinner.",
+      "Strength: Do 3 sets of 15 bodyweight squats and 10 push-ups.",
+      "Cooldown: Try a quick home yoga session before bed to relax."
+    ];
   } else if (dietPercent <= Math.min(exercisePercent, skincarePercent) && dietPercent < 100) {
-     recommendedFocus = "diet";
-     focusDesc = "Let's focus on healthy eating. Make mindful food choices today!";
-     focusPlan = [
-       "Greens: Include at least one full serving of vegetables with every main meal.",
-       "Snacking: Swap out processed sugary snacks for mixed nuts or fresh fruit.",
-       "Protein: Ensure you are eating adequate lean proteins to stay satiated.",
-       "Prep: Plan your major meals for tomorrow tonight so you aren't tempted to order takeout."
-     ];
+    recommendedFocus = "diet";
+    focusDesc = "Let's focus on healthy eating. Make mindful food choices today!";
+    focusPlan = [
+      "Greens: Include at least one full serving of vegetables with every main meal.",
+      "Snacking: Swap out processed sugary snacks for mixed nuts or fresh fruit.",
+      "Protein: Ensure you are eating adequate lean proteins to stay satiated.",
+      "Prep: Plan your major meals for tomorrow tonight so you aren't tempted to order takeout."
+    ];
   } else if (skincarePercent < 100) {
-     recommendedFocus = "skincare";
-     focusDesc = "Don't forget your skin! A consistent routine makes a massive difference.";
-     focusPlan = [
-       "Step 1: Cleanse your face thoroughly both morning and night.",
-       "Step 2: Apply a hydrating serum while your skin is still slightly damp.",
-       "Step 3: Never skip your moisturizer to lock in hydration.",
-       "Step 4: Protect with SPF. Always apply broad-spectrum sunscreen during the day."
-     ];
+    recommendedFocus = "skincare";
+    focusDesc = "Don't forget your skin! A consistent routine makes a massive difference.";
+    focusPlan = [
+      "Step 1: Cleanse your face thoroughly both morning and night.",
+      "Step 2: Apply a hydrating serum while your skin is still slightly damp.",
+      "Step 3: Never skip your moisturizer to lock in hydration.",
+      "Step 4: Protect with SPF. Always apply broad-spectrum sunscreen during the day."
+    ];
   }
 
   return (
@@ -601,14 +601,15 @@ export default function Dashboard() {
                   dataKey="value"
                   startAngle={90}
                   endAngle={-270}
+                  stroke="none"
                 >
                   {weeklyProgress.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
               </PieChart>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-slate-800 dark:text-white">{overallPercent}%</span>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                <span className="text-lg font-bold text-slate-800 dark:text-white leading-none text-center block mt-[2px]">{overallPercent}%</span>
               </div>
             </div>
             <div>
@@ -731,7 +732,7 @@ export default function Dashboard() {
               <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-6 bg-[#f0f9ff] dark:bg-slate-700/50 p-3 rounded-lg border border-[#bae6fd] dark:border-slate-600">
                 {focusDesc}
               </p>
-              
+
               <ul className="space-y-4">
                 {focusPlan.map((step, idx) => {
                   return (
@@ -749,8 +750,8 @@ export default function Dashboard() {
             </div>
 
             <button
-               onClick={() => setShowPlan(false)}
-               className="w-full mt-8 py-3.5 bg-gradient-to-r from-[#b89cff] to-[#7f2dd0] text-white font-bold rounded-xl shadow-lg shadow-[#b89cff]/30 hover:-translate-y-0.5 transition-all cursor-pointer"
+              onClick={() => setShowPlan(false)}
+              className="w-full mt-8 py-3.5 bg-gradient-to-r from-[#b89cff] to-[#7f2dd0] text-white font-bold rounded-xl shadow-lg shadow-[#b89cff]/30 hover:-translate-y-0.5 transition-all cursor-pointer"
             >
               Let's Do It!
             </button>

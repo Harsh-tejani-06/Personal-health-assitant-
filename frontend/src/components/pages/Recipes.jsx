@@ -1,8 +1,22 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import API from "../../api/axios";
 import { getRecipeDates, getRecipeHistory, getStarredRecipes, addStarredRecipe, removeStarredRecipe } from "../../services/chatService";
 import { addToDiet } from "../../services/dietService";
 import CalendarView from "../shared/CalendarView";
+
+const SidebarIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <path d="M9 3v18" />
+  </svg>
+);
+
+const CalIconSm = () => (
+  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <rect x="3" y="4" width="18" height="18" rx="2" />
+    <path d="M16 2v4M8 2v4M3 10h18" />
+  </svg>
+);
 
 // -------- Helper: format date --------
 function formatDate(dateStr) {
@@ -43,11 +57,27 @@ export default function RecipesStream() {
   const [showStarred, setShowStarred] = useState(false);
   const [starredNames, setStarredNames] = useState(new Set());
   const [showCalendar, setShowCalendar] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const chatEndRef = useRef(null);
   const abortControllerRef = useRef(null);
   const MAX_IMAGES = 3;
 
   const isToday = selectedDate === getTodayDate();
+
+  // Group dates into sections (matches Chatbot sidebar structure)
+  const groupedDates = useMemo(() => {
+    const today = getTodayDate();
+    const todayObj = new Date();
+    const groups = { today: [], yesterday: [], thisWeek: [], older: [] };
+    dates.forEach((d) => {
+      const diff = Math.floor((todayObj - new Date(d + "T00:00:00")) / (1000 * 60 * 60 * 24));
+      if (d === today) groups.today.push(d);
+      else if (diff === 1) groups.yesterday.push(d);
+      else if (diff <= 7) groups.thisWeek.push(d);
+      else groups.older.push(d);
+    });
+    return groups;
+  }, [dates]);
 
   // Load dates and starred recipes on mount
   useEffect(() => {
@@ -328,10 +358,95 @@ export default function RecipesStream() {
 
       <div className="fixed inset-0 bg-gradient-to-br from-[#f0f9ff] via-[#f8fafc] to-[#f0fdf4] dark:from-transparent dark:via-transparent dark:to-transparent pointer-events-none" />
 
+      {/* ====== LEFT SIDEBAR — RECIPE HISTORY (matches Chatbot structure) ====== */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      <aside
+        className={`fixed top-0 left-0 h-full z-50 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/60 dark:border-slate-700/60 shadow-2xl transition-transform duration-300 ease-out flex flex-col
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] flex items-center justify-center text-white text-lg shadow-lg shadow-purple-500/25">
+                🍳
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white">Recipe History</h3>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{dates.length} sessions</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Date List (grouped, matching Chatbot style) */}
+        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 custom-scrollbar">
+          {[
+            { label: 'Today', items: groupedDates.today },
+            { label: 'Yesterday', items: groupedDates.yesterday },
+            { label: 'This Week', items: groupedDates.thisWeek },
+            { label: 'Older', items: groupedDates.older },
+          ].map((group) =>
+            group.items.length > 0 && (
+              <div key={group.label}>
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 px-2">
+                  {group.label}
+                </p>
+                <div className="space-y-0.5">
+                  {group.items.map((d) => (
+                    <div
+                      key={d}
+                      onClick={() => { setSelectedDate(d); setSidebarOpen(false); }}
+                      role="button"
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group cursor-pointer ${d === selectedDate
+                        ? 'bg-gradient-to-r from-[#b89cff]/10 to-[#7f2dd0]/10 dark:from-[#b89cff]/20 dark:to-[#7f2dd0]/20 text-[#7f2dd0] dark:text-[#c4b5fd] border border-[#b89cff]/30 dark:border-[#b89cff]/30'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                        }`}
+                    >
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${d === selectedDate
+                        ? 'bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] text-white shadow-md shadow-purple-500/20'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 group-hover:text-[#b89cff]'
+                        }`}>
+                        <CalIconSm />
+                      </div>
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="truncate">{formatDate(d)}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">{d}</p>
+                      </div>
+                      {d === selectedDate && (
+                        <span className="w-2 h-2 rounded-full bg-[#b89cff] flex-shrink-0" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          )}
+          {dates.length === 0 && (
+            <div className="py-10 text-center">
+              <p className="text-slate-400 dark:text-slate-500 text-sm">No recipe history yet</p>
+              <p className="text-slate-300 dark:text-slate-600 text-xs mt-1">Start generating recipes below</p>
+            </div>
+          )}
+        </div>
+      </aside>
+
       {/* Header with Calendar */}
       <div className="relative bg-white dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700 px-6 py-4 shadow-sm backdrop-blur-sm transition-colors">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
+
             <div className="w-10 h-10 bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] rounded-xl flex items-center justify-center text-white text-xl">
               🍳
             </div>
@@ -349,7 +464,7 @@ export default function RecipesStream() {
 
             {/* Starred recipes toggle */}
             <button
-              onClick={() => { setShowStarred(!showStarred); setShowDates(false); }}
+              onClick={() => setShowStarred(!showStarred)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${showStarred
                 ? 'bg-gradient-to-r from-[#f59e0b] to-[#d97706] text-white border-transparent shadow-lg shadow-[#f59e0b]/30'
                 : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-[#f59e0b]'
@@ -358,58 +473,25 @@ export default function RecipesStream() {
               ⭐ {starredRecipes.length}
             </button>
 
-            {/* Calendar grid toggle */}
+            {/* Calendar toggle */}
             <button
-              onClick={() => { setShowCalendar(true); setShowDates(false); setShowStarred(false); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-[#b89cff] hover:text-[#b89cff] transition-all"
+              onClick={() => { setShowCalendar(true); setShowStarred(false); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-[#b89cff] hover:text-[#b89cff] transition-all cursor-pointer"
             >
               📅
             </button>
 
-            {/* Date list toggle */}
+            {/* Date label — opens sidebar (matches Chatbot pattern) */}
             <button
-              onClick={() => { setShowDates(!showDates); setShowStarred(false); }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${showDates
-                ? 'bg-gradient-to-r from-[#b89cff] to-[#7f2dd0] text-white border-transparent shadow-lg shadow-[#b89cff]/30'
-                : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-[#b89cff]'
-                }`}
+              onClick={() => setSidebarOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-semibold hover:bg-purple-50 dark:hover:bg-purple-500/10 hover:text-[#7f2dd0] transition-all cursor-pointer"
             >
+              <CalIconSm />
               {formatDate(selectedDate)}
-              <svg
-                width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
-                style={{ transform: showDates ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s ease" }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
             </button>
           </div>
         </div>
       </div>
-
-      {/* Date Picker Dropdown */}
-      {showDates && (
-        <div className="relative z-40 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl mx-4 mt-2 p-3 shadow-xl max-h-52 overflow-y-auto animate-fadeIn">
-          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-2">Recipe History</p>
-          <div className="space-y-1">
-            {dates.map(d => (
-              <button
-                key={d}
-                onClick={() => { setSelectedDate(d); setShowDates(false); }}
-                className={`w-full text-left px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center justify-between ${d === selectedDate
-                  ? 'bg-gradient-to-r from-[#b89cff] to-[#7f2dd0] text-white'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:translate-x-1'
-                  }`}
-              >
-                <span>📅 {formatDate(d)}</span>
-                <span className="text-xs opacity-60">{d}</span>
-              </button>
-            ))}
-            {dates.length === 0 && (
-              <p className="text-center text-slate-400 dark:text-slate-500 text-sm py-4">No recipe history yet</p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ====== Starred Recipes — Premium Overlay Panel ====== */}
       {showStarred && (

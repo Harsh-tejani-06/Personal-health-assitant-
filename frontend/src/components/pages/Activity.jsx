@@ -15,7 +15,7 @@ const ACTIVITIES = [
         bgLight: "bg-green-50 dark:bg-green-900/20",
         border: "border-green-200 dark:border-green-800",
         ringColor: "ring-green-300 dark:ring-green-700",
-        desc: "Log your daily workout or physical activity"
+        desc: "Log your daily workout"
     },
     {
         key: "diet",
@@ -213,7 +213,7 @@ export default function Activity() {
                                 <button
                                     onClick={() => handleToggle(act.key)}
                                     disabled={isSaving}
-                                    className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${isSaving
+                                    className={`w-full py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer ${isSaving
                                         ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-wait'
                                         : isCompleted
                                             ? 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30'
@@ -246,7 +246,7 @@ export default function Activity() {
                 >
                     <div className="flex items-center gap-3">
                         <span className="text-xl">📊</span>
-                        <div>
+                        <div className="cursor-pointer">
                             <h3 className="font-bold text-slate-800 dark:text-white">Activity History</h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400">Last 30 days</p>
                         </div>

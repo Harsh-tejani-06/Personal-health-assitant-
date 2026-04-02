@@ -369,7 +369,7 @@ export default function Chatbot() {
     try {
       await deleteChatHistory(date);
       setDates((prev) => prev.filter((d) => d !== date));
-      
+
       if (selectedDate === date) {
         setSelectedDate(getTodayDate());
       }
@@ -530,7 +530,7 @@ export default function Chatbot() {
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors cursor-pointer"
             >
               ✕
             </button>
@@ -611,15 +611,6 @@ export default function Chatbot() {
           <div className="max-w-[860px] mx-auto">
             <div className="flex items-center gap-3 px-4 py-3 bg-white/70 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-700/40 shadow-sm transition-colors">
 
-              {/* Sidebar toggle */}
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="w-9 h-9 rounded-xl bg-slate-100/80 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-                title="Chat History"
-              >
-                <SidebarIcon />
-              </button>
-
               {/* Title */}
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 flex-shrink-0">
@@ -642,14 +633,14 @@ export default function Chatbot() {
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={() => setShowCalendar(true)}
-                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-500 transition-all"
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-500 transition-all cursor-pointer"
                   title="Open calendar"
                 >
                   📅
                 </button>
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-500 transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-500 transition-all cursor-pointer"
                 >
                   <CalendarIcon />
                   {formatDate(selectedDate)}
@@ -698,7 +689,7 @@ export default function Chatbot() {
                 </div>
 
                 {isToday && (
-                  <div className="grid grid-cols-2 gap-2 max-w-md w-full mt-2">
+                  <div className="grid grid-cols-2 gap-2 max-w-md w-full mt-2 cursor-pointer">
                     {[
                       { icon: "💪", text: "Workout for my goals" },
                       { icon: "🥗", text: "Diet suggestions" },

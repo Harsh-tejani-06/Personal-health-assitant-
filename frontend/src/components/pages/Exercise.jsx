@@ -7,6 +7,7 @@ import {
   getExerciseCalendar,
   getNextDaySuggestions,
 } from "../../services/exerciseService";
+import CalendarView from "../shared/CalendarView";
 
 function getTodayDate() {
   return new Date().toISOString().split("T")[0];
@@ -27,7 +28,8 @@ const PRIORITY_COLORS = {
 // MAIN COMPONENT
 // ============================================================
 export default function Exercise() {
-  const [view, setView] = useState("loading"); // loading | generate | routine | calendar
+  const [view, setView] = useState("loading"); // loading | generate | routine
+  const [showCalendar, setShowCalendar] = useState(false);
   const [plan, setPlan] = useState(null);
   const [generating, setGenerating] = useState(false);
 
@@ -146,7 +148,7 @@ export default function Exercise() {
 
   // ---- Calendar ----
   async function openCalendar() {
-    setView("calendar");
+    setShowCalendar(true);
     try {
       const data = await getExerciseCalendar();
       setCalendarLogs(data.logs || []);
@@ -418,247 +420,6 @@ export default function Exercise() {
     );
 
   // ============================================================
-  // RENDER: CALENDAR VIEW
-  // ============================================================
-  if (view === "calendar") {
-    const calDays = getCalendarDays();
-    const today = getTodayDate();
-    return (
-      <div className="max-w-4xl mx-auto pb-4">
-        {toast && (
-          <div className="fixed top-24 right-6 z-50 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-2 animate-bounce">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {toast}
-            </span>
-          </div>
-        )}
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => {
-              setSelectedCalDay(null);
-              setView("routine");
-            }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-500 transition-all"
-          >
-            ← Back to Routine
-          </button>
-          <h1 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-            📅 Exercise Calendar
-          </h1>
-        </div>
-
-        {/* Month Navigation + Calendar */}
-        <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() =>
-                setCalendarMonth((p) => {
-                  let m = p.month - 1,
-                    y = p.year;
-                  if (m < 0) {
-                    m = 11;
-                    y--;
-                  }
-                  return { year: y, month: m };
-                })
-              }
-              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-500 transition-all font-bold px-0"
-            >
-              ‹
-            </button>
-            <h2 className="text-lg font-black text-slate-800 dark:text-white">
-              {monthNames[calendarMonth.month]} {calendarMonth.year}
-            </h2>
-            <button
-              onClick={() =>
-                setCalendarMonth((p) => {
-                  let m = p.month + 1,
-                    y = p.year;
-                  if (m > 11) {
-                    m = 0;
-                    y++;
-                  }
-                  return { year: y, month: m };
-                })
-              }
-              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-500 transition-all font-bold px-0"
-            >
-              ›
-            </button>
-          </div>
-
-          {/* Day headers */}
-          <div className="grid grid-cols-7 gap-2 mb-2">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div
-                key={d}
-                className="text-center text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
-              >
-                {d}
-              </div>
-            ))}
-          </div>
-
-          {/* Day cells */}
-          <div className="grid grid-cols-7 gap-2">
-            {calDays.map((dateStr, i) => {
-              if (!dateStr) return <div key={`e-${i}`} />;
-              const dayNum = parseInt(dateStr.split("-")[2]);
-              const status = getDayStatus(dateStr);
-              const isToday = dateStr === today;
-              const isFuture = dateStr > today;
-              const isSelected = selectedCalDay === dateStr;
-              return (
-                <button
-                  key={dateStr}
-                  disabled={isFuture}
-                  onClick={() => !isFuture && selectCalendarDay(dateStr)}
-                  className={`py-2.5 sm:py-3 rounded-xl flex flex-col items-center justify-center text-sm font-bold transition-all px-0
-                    ${isFuture ? "opacity-30 cursor-not-allowed" : "hover:scale-105 cursor-pointer"}
-                    ${isSelected ? "ring-2 ring-blue-400 ring-offset-2 dark:ring-offset-slate-800" : ""}
-                    ${isToday ? "border-2 border-blue-400 dark:border-blue-500" : "border border-slate-100 dark:border-slate-700"}
-                    ${status === "complete"
-                      ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
-                      : status === "partial"
-                        ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
-                        : "bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400"
-                    }`}
-                >
-                  <span>{dayNum}</span>
-                  <span className="text-[9px] mt-0.5 leading-none">
-                    {status === "complete"
-                      ? "✅"
-                      : status === "partial"
-                        ? "🟡"
-                        : isFuture
-                          ? ""
-                          : "—"}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Legend */}
-          <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-              ✅ Complete
-            </span>
-            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-              🟡 Partial
-            </span>
-            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-              — Not done
-            </span>
-          </div>
-        </div>
-
-        {/* Selected Day Detail — Modal Overlay */}
-        {selectedCalDay && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelectedCalDay(null)}>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden w-[90%] max-w-lg max-h-[80vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-base">
-                      {selectedCalDay === today
-                        ? "Today"
-                        : formatDateShort(selectedCalDay)}
-                    </h3>
-                    <p className="text-white/80 text-[11px] font-medium">
-                      {selectedCalDay} • Click checkboxes to update
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedCalDay(null)}
-                    className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-all px-0 text-sm"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-              <div className="p-4 space-y-3">
-                {[
-                  {
-                    label: "Morning Workout ☀️",
-                    steps: plan?.morning || [],
-                    checks: calDayMorning,
-                    period: "morning",
-                  },
-                  {
-                    label: "Night Workout 🌙",
-                    steps: plan?.night || [],
-                    checks: calDayNight,
-                    period: "night",
-                  },
-                ].map((section) => (
-                  <div key={section.period}>
-                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                      {section.label}
-                    </h4>
-                    {section.steps.map((step, i) => (
-                      <label
-                        key={i}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl mb-1 cursor-pointer transition-all ${section.checks[i]
-                          ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
-                          : "bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50"
-                          }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={section.checks[i] || false}
-                          onChange={() =>
-                            handleCalDayCheck(section.period, i)
-                          }
-                          className="w-4 h-4 rounded accent-blue-500 cursor-pointer"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className={`text-xs font-semibold ${section.checks[i]
-                              ? "text-emerald-700 dark:text-emerald-300 line-through"
-                              : "text-slate-700 dark:text-slate-300"
-                              }`}
-                          >
-                            {step.name}
-                          </p>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
-                            {step.instruction}
-                          </p>
-                        </div>
-                        {step.youtubeQuery && (
-                          <a
-                            href={youtubeLink(step.youtubeQuery)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-red-500 hover:text-red-600 shrink-0"
-                            title="Watch on YouTube"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                            </svg>
-                          </a>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                ))}
-                {calDaySaving && (
-                  <p className="text-center text-xs text-blue-500 font-medium animate-pulse">
-                    Saving...
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ============================================================
   // RENDER: DAILY ROUTINE VIEW
   // ============================================================
   return (
@@ -708,26 +469,26 @@ export default function Exercise() {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => goToDay(-1)}
-                className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-all px-0 font-bold"
+                className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-all px-0 font-bold cursor-pointer"
               >
                 ‹
               </button>
               <button
                 onClick={() => goToDay(1)}
                 disabled={routineDate >= getTodayDate()}
-                className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-all px-0 font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-all px-0 font-bold disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
                 ›
               </button>
               <button
                 onClick={openCalendar}
-                className="px-4 py-2 bg-white/20 rounded-xl text-xs font-bold hover:bg-white/30 transition-all"
+                className="px-4 py-2 bg-white/20 rounded-xl text-xs font-bold hover:bg-white/30 transition-all cursor-pointer"
               >
                 📅 Calendar
               </button>
               <button
                 onClick={handleNextDaySuggestions}
-                className="px-4 py-2 bg-white/20 rounded-xl text-xs font-bold hover:bg-white/30 transition-all"
+                className="px-4 py-2 bg-white/20 rounded-xl text-xs font-bold hover:bg-white/30 transition-all cursor-pointer"
               >
                 🤖 Next Day
               </button>
@@ -735,7 +496,7 @@ export default function Exercise() {
                 onClick={() => {
                   setView("generate");
                 }}
-                className="px-4 py-2 bg-white/20 rounded-xl text-xs font-bold hover:bg-white/30 transition-all"
+                className="px-4 py-2 bg-white/20 rounded-xl text-xs font-bold hover:bg-white/30 transition-all cursor-pointer"
               >
                 🔄 Regenerate
               </button>
@@ -1084,6 +845,70 @@ export default function Exercise() {
           to { opacity: 1; transform: scale(1); }
         }
       `}</style>
+
+      {/* Calendar Modal — Diet-style compact overlay */}
+      {showCalendar && (
+        <CalendarView
+          dates={calendarLogs.map(l => l.date)}
+          selectedDate={routineDate}
+          onSelectDate={(dateStr) => {
+            setShowCalendar(false);
+            selectCalendarDay(dateStr);
+          }}
+          onClose={() => setShowCalendar(false)}
+          accentColor="blue"
+          title="Exercise Calendar"
+          emoji="🏋️"
+          statusMap={Object.fromEntries(
+            calendarLogs.map(l => [l.date, getDayStatus(l.date)])
+          )}
+        />
+      )}
+
+      {/* Selected Day Detail — Modal Overlay */}
+      {selectedCalDay && (() => {
+        const today = getTodayDate();
+        return (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelectedCalDay(null)}>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden w-[90%] max-w-lg max-h-[80vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()} style={{ animation: 'fadeIn 0.25s ease-out' }}>
+              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-base">{selectedCalDay === today ? "Today" : formatDateShort(selectedCalDay)}</h3>
+                    <p className="text-white/80 text-[11px] font-medium">{selectedCalDay} • Click checkboxes to update</p>
+                  </div>
+                  <button onClick={() => setSelectedCalDay(null)} className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-all px-0 text-sm">✕</button>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                {[
+                  { label: "Morning Workout ☀️", steps: plan?.morning || [], checks: calDayMorning, period: "morning" },
+                  { label: "Night Workout 🌙", steps: plan?.night || [], checks: calDayNight, period: "night" },
+                ].map((section) => (
+                  <div key={section.period}>
+                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{section.label}</h4>
+                    {section.steps.map((step, i) => (
+                      <label key={i} className={`flex items-center gap-2 p-2.5 rounded-xl mb-1 cursor-pointer transition-all ${section.checks[i] ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800" : "bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50"}`}>
+                        <input type="checkbox" checked={section.checks[i] || false} onChange={() => handleCalDayCheck(section.period, i)} className="w-4 h-4 rounded accent-blue-500 cursor-pointer" />
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs font-semibold ${section.checks[i] ? "text-emerald-700 dark:text-emerald-300 line-through" : "text-slate-700 dark:text-slate-300"}`}>{step.name}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{step.instruction}</p>
+                        </div>
+                        {step.youtubeQuery && (
+                          <a href={youtubeLink(step.youtubeQuery)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-red-500 hover:text-red-600 shrink-0" title="Watch on YouTube">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
+                          </a>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                ))}
+                {calDaySaving && <p className="text-center text-xs text-blue-500 font-medium animate-pulse">Saving...</p>}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

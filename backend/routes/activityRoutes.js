@@ -3,7 +3,8 @@ import { protect } from "../middleware/authMiddleware.js";
 import DailyActivity from "../models/DailyActivity.js";
 import User from "../models/User.js";
 import { calculatePoints } from "../utils/gamification.js";
-
+import ExercisePlan from "../models/ExercisePlan.js";
+import SkinCarePlan from "../models/SkinCarePlan.js";
 const router = express.Router();
 
 // -------- Helper: get today's date string --------
@@ -96,6 +97,56 @@ router.post("/activity/log", protect, async (req, res) => {
             if (details !== undefined) activity[type].details = details;
             if (type === "exercise" && duration !== undefined) activity[type].duration = duration;
         }
+
+        // --- Cascade Completion Logic ---
+        if (type === "exercise") {
+            const exercisePlan = await ExercisePlan.findOne({ user: userId });
+            if (exercisePlan && exercisePlan.plan) {
+                const mornLen = exercisePlan.plan.morning?.length || 0;
+                const nightLen = exercisePlan.plan.night?.length || 0;
+                const morningArr = new Array(mornLen).fill(completed);
+                const nightArr = new Array(nightLen).fill(completed);
+                
+                const logIndex = exercisePlan.dailyLogs.findIndex(l => l.date === targetDate);
+                if (logIndex >= 0) {
+                    exercisePlan.dailyLogs[logIndex].morningCompleted = morningArr;
+                    exercisePlan.dailyLogs[logIndex].nightCompleted = nightArr;
+                } else {
+                    exercisePlan.dailyLogs.push({
+                        date: targetDate,
+                        morningCompleted: morningArr,
+                        nightCompleted: nightArr,
+                        notes: ""
+                    });
+                }
+                await exercisePlan.save();
+            }
+        }
+
+        if (type === "skinCare") {
+            const skincarePlan = await SkinCarePlan.findOne({ user: userId });
+            if (skincarePlan && skincarePlan.plan) {
+                const mornLen = skincarePlan.plan.morning?.length || 0;
+                const nightLen = skincarePlan.plan.night?.length || 0;
+                const morningArr = new Array(mornLen).fill(completed);
+                const nightArr = new Array(nightLen).fill(completed);
+                
+                const logIndex = skincarePlan.dailyLogs.findIndex(l => l.date === targetDate);
+                if (logIndex >= 0) {
+                    skincarePlan.dailyLogs[logIndex].morningCompleted = morningArr;
+                    skincarePlan.dailyLogs[logIndex].nightCompleted = nightArr;
+                } else {
+                    skincarePlan.dailyLogs.push({
+                        date: targetDate,
+                        morningCompleted: morningArr,
+                        nightCompleted: nightArr,
+                        notes: ""
+                    });
+                }
+                await skincarePlan.save();
+            }
+        }
+        // --------------------------------
 
         await activity.save();
 

@@ -1,10 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getActivity } from "../../services/activityService";
+import { getUserProfile } from "../../services/profileService";
 
 export default function Sidebar({ open, setOpen }) {
   const location = useLocation();
   const [progress, setProgress] = useState(0);
+  const [user, setUser] = useState({ fullname: "", displayName: "" });
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -16,16 +18,32 @@ export default function Sidebar({ open, setOpen }) {
             activity.exercise?.completed,
             activity.diet?.completed,
             activity.skinCare?.completed,
-            (activity.water?.amount || 0) >= 2.5 // Assuming 2.5L is goal
+            (activity.water?.amount || 0) >= 3 // Assuming 3L is goal
           ].filter(Boolean).length;
-          
+
           setProgress(Math.round((completedHabitsCount / 4) * 100));
         }
       } catch (error) {
         console.error("Failed to fetch sidebar progress:", error);
       }
     };
+
     fetchProgress();
+
+    window.addEventListener('activityUpdated', fetchProgress);
+    return () => window.removeEventListener('activityUpdated', fetchProgress);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await getUserProfile();
+        setUser(userData);
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+      }
+    };
+    fetchUser();
   }, []);
 
   const logoutUser = () => {
@@ -159,7 +177,7 @@ export default function Sidebar({ open, setOpen }) {
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
-              {open && <span className="text-sm font-medium">Logout</span>}
+              {open && <span className="text-sm font-medium cursor-pointer">Logout</span>}
               {!open && (
                 <div className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                   Logout
@@ -172,15 +190,14 @@ export default function Sidebar({ open, setOpen }) {
           <div className={`flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 ${!open && 'justify-center'}`}>
 
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#06b6d4] to-[#10b981] flex items-center justify-center text-white text-xs font-bold">
-              VV
+              {(user.displayName || user.fullname || "U").charAt(0).toUpperCase()}
             </div>
 
 
             {open && (
               <div className="flex-1 min-w-0">
                 {/* <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{user.displayName || user.fullname}</p> */}
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">Vansh Vanapariya</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Pro Member</p>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{user.displayName || user.fullname}</p>
               </div>
             )}
           </div>

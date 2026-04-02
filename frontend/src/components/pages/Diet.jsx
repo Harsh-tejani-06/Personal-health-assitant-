@@ -60,7 +60,7 @@ export default function Diet() {
     const [savingCompletion, setSavingCompletion] = useState(false);
 
     useEffect(() => { loadDates(); }, []);
-    useEffect(() => { 
+    useEffect(() => {
         loadDiet(selectedDate);
         loadCompletionStatus(selectedDate);
     }, [selectedDate]);
@@ -186,22 +186,24 @@ export default function Diet() {
                 className={`fixed top-0 left-0 h-full z-50 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/60 dark:border-slate-700/60 shadow-2xl transition-transform duration-300 ease-out flex flex-col
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
             >
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/25">
-                            🥗
+                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/25">
+                                🥗
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 dark:text-white">Plan History</h3>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{dates.length} entries</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-slate-800 dark:text-white">Plan History</h3>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{dates.length} entries</p>
-                        </div>
+                        <button
+                            onClick={() => setSidebarOpen(false)}
+                            className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                            ✕
+                        </button>
                     </div>
-                    <button
-                        onClick={() => setSidebarOpen(false)}
-                        className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors px-0"
-                    >
-                        <span className="text-xl">✕</span>
-                    </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 custom-scrollbar">
@@ -263,12 +265,6 @@ export default function Diet() {
 
                             <div className="relative flex items-center justify-between flex-wrap gap-4">
                                 <div className="flex items-center gap-4">
-                                    <button
-                                        onClick={() => setSidebarOpen(true)}
-                                        className="w-10 h-10 rounded-xl bg-slate-100/80 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 flex items-center justify-center transition-all hover:scale-105 active:scale-95 px-0"
-                                    >
-                                        <SidebarIcon />
-                                    </button>
 
                                     <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-200 dark:shadow-emerald-900/30">
                                         <span className="text-2xl">🥗</span>
@@ -307,21 +303,29 @@ export default function Diet() {
                                         <button
                                             onClick={handleMarkCompleted}
                                             disabled={savingCompletion}
-                                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
-                                                isDietCompleted 
-                                                ? 'bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-700' 
+                                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all border ${isDietCompleted
+                                                ? 'bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-700'
                                                 : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-400 dark:border-indigo-700'
-                                            } ${savingCompletion ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                } ${savingCompletion ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             title={isDietCompleted ? "Mark Incomplete" : "Mark Completed"}
                                         >
                                             {savingCompletion ? "..." : isDietCompleted ? "✅ Completed" : "✓ Mark Done"}
                                         </button>
                                     )}
 
+                                    {/* Calendar icon — opens modal */}
                                     <button
                                         onClick={() => setShowCalendar(true)}
-                                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100/80 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-bold hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-500 transition-all border border-transparent hover:border-emerald-200"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-emerald-400 hover:text-emerald-500 transition-all cursor-pointer"
                                         title="Open calendar"
+                                    >
+                                        📅
+                                    </button>
+
+                                    {/* Date label — opens sidebar (matches Chatbot's date badge button) */}
+                                    <button
+                                        onClick={() => setSidebarOpen(true)}
+                                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100/80 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-bold hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-500 transition-all border border-transparent hover:border-emerald-200 cursor-pointer"
                                     >
                                         <CalendarIcon />
                                         {formatDate(selectedDate)}

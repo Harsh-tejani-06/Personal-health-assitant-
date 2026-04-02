@@ -9,11 +9,6 @@ function getTodayDate() {
   return new Date().toISOString().split("T")[0];
 }
 
-function formatDateShort(d) {
-  const date = new Date(d + "T00:00:00");
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
 /**
  * CalendarView — Reusable calendar grid overlay/modal.
  *
@@ -22,9 +17,11 @@ function formatDateShort(d) {
  *   selectedDate — currently active date string
  *   onSelectDate — (dateStr) => void
  *   onClose      — () => void
- *   accentColor  — tailwind color key, e.g. "purple", "emerald", "indigo"
+ *   accentColor  — tailwind color key, e.g. "purple", "emerald", "indigo", "blue", "pink"
  *   title        — string, e.g. "Recipe Calendar"
  *   emoji        — string, e.g. "📅"
+ *   statusMap    — optional object { [dateStr]: "complete" | "partial" | "none" }
+ *                  When provided, shows ✅/🟡/— status indicators instead of simple ●/·
  */
 export default function CalendarView({
   dates = [],
@@ -34,6 +31,7 @@ export default function CalendarView({
   accentColor = "purple",
   title = "Calendar",
   emoji = "📅",
+  statusMap = null,
 }) {
   const [calMonth, setCalMonth] = useState(() => {
     const d = selectedDate ? new Date(selectedDate + "T00:00:00") : new Date();
@@ -97,9 +95,44 @@ export default function CalendarView({
       hasData: "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300",
       btnBg: "bg-indigo-100 dark:bg-indigo-900/30 hover:bg-indigo-200 dark:hover:bg-indigo-800/40",
     },
+    blue: {
+      gradient: "from-blue-500 to-cyan-500",
+      ring: "ring-blue-400",
+      hoverBg: "hover:bg-blue-100 dark:hover:bg-blue-900/30",
+      hoverText: "hover:text-blue-500",
+      todayBorder: "border-blue-400 dark:border-blue-500",
+      hasData: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
+      btnBg: "bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-800/40",
+    },
+    pink: {
+      gradient: "from-pink-500 to-rose-500",
+      ring: "ring-pink-400",
+      hoverBg: "hover:bg-pink-100 dark:hover:bg-pink-900/30",
+      hoverText: "hover:text-pink-500",
+      todayBorder: "border-pink-400 dark:border-pink-500",
+      hasData: "bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300",
+      btnBg: "bg-pink-100 dark:bg-pink-900/30 hover:bg-pink-200 dark:hover:bg-pink-800/40",
+    },
   };
 
   const c = colors[accentColor] || colors.purple;
+  const useStatusMap = statusMap !== null;
+
+  // Determine cell background when using statusMap
+  function getStatusStyle(dateStr) {
+    const status = statusMap?.[dateStr];
+    if (status === "complete") return "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300";
+    if (status === "partial") return "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300";
+    return "bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400";
+  }
+
+  function getStatusDot(dateStr, isFuture) {
+    const status = statusMap?.[dateStr];
+    if (status === "complete") return "✅";
+    if (status === "partial") return "🟡";
+    if (isFuture) return "";
+    return "—";
+  }
 
   return (
     <div
@@ -174,6 +207,18 @@ export default function CalendarView({
               const isSelected = selectedDate === dateStr;
               const hasData = dateSet.has(dateStr);
 
+              // Cell background
+              const cellBg = useStatusMap
+                ? getStatusStyle(dateStr)
+                : hasData
+                  ? c.hasData
+                  : "bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400";
+
+              // Status indicator
+              const indicator = useStatusMap
+                ? getStatusDot(dateStr, isFuture)
+                : hasData ? "●" : isFuture ? "" : "·";
+
               return (
                 <button
                   key={dateStr}
@@ -186,14 +231,11 @@ export default function CalendarView({
                     ${isFuture ? "opacity-30 cursor-not-allowed" : "hover:scale-105 cursor-pointer"}
                     ${isSelected ? `ring-2 ${c.ring} ring-offset-2 dark:ring-offset-slate-800` : ""}
                     ${isToday ? `border-2 ${c.todayBorder}` : "border border-slate-100 dark:border-slate-700"}
-                    ${hasData
-                      ? c.hasData
-                      : "bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400"
-                    }`}
+                    ${cellBg}`}
                 >
                   <span>{dayNum}</span>
                   <span className="text-[8px] mt-0.5 leading-none">
-                    {hasData ? "●" : isFuture ? "" : "·"}
+                    {indicator}
                   </span>
                 </button>
               );
@@ -201,13 +243,29 @@ export default function CalendarView({
           </div>
 
           {/* Legend */}
-          <div className="flex items-center justify-center gap-6 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-              ● Has data
-            </span>
-            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-              · No data
-            </span>
+          <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex-wrap">
+            {useStatusMap ? (
+              <>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  ✅ Complete
+                </span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  🟡 Partial
+                </span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  — Not done
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  ● Has data
+                </span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  · No data
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
