@@ -20,12 +20,12 @@ export default function MainLayout() {
       <div
         className={`
           relative min-h-screen
-          ${open ? "ml-64" : "ml-20"}
+          ml-0 ${open ? "md:ml-64" : "md:ml-20"}
           transition-all duration-300 ease-in-out
         `}
       >
         {/* Top Header — inside content area so it scrolls with page */}
-        <TopHeader />
+        <TopHeader setSidebarOpen={setOpen} isSidebarOpen={open} />
 
         <div className={isChatbot ? "p-0" : "p-4 md:p-6 lg:p-8"}>
           <Outlet />

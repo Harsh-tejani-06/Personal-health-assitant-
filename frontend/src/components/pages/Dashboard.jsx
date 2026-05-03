@@ -305,33 +305,33 @@ export default function Dashboard() {
       <div className="relative max-w-7xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-wrap items-end md:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <span className="text-[#0891b2] dark:text-[#22d3ee] text-sm font-medium">{currentDate}</span>
               <span className="text-slate-300 dark:text-slate-600">|</span>
               <span className="text-[#0891b2] dark:text-[#22d3ee] text-sm font-mono">{currentTime}</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-white flex items-center gap-2 flex-wrap">
-              {greeting},
+            <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white flex items-center gap-1.5 sm:gap-2">
+              <span className="whitespace-nowrap">{greeting},</span>
               {isEditingName ? (
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={editedName}
                     onChange={(e) => setEditedName(e.target.value)}
-                    className="bg-transparent border-b-2 border-[#b89cff] text-[#b89cff] focus:outline-none min-w-[150px] max-w-[250px]"
+                    className="bg-transparent border-b-2 border-[#b89cff] text-[#b89cff] focus:outline-none min-w-[100px] max-w-[200px]"
                     autoFocus
                   />
-                  <button onClick={handleNameSave} className="text-green-500 hover:text-green-600 text-xl md:text-2xl" title="Save">✓</button>
-                  <button onClick={() => { setIsEditingName(false); setEditedName(user.displayName || user.fullname); }} className="text-red-500 hover:text-red-600 text-xl md:text-2xl" title="Cancel">✕</button>
+                  <button onClick={handleNameSave} className="text-green-500 hover:text-green-600 text-lg md:text-2xl" title="Save">✓</button>
+                  <button onClick={() => { setIsEditingName(false); setEditedName(user.displayName || user.fullname); }} className="text-red-500 hover:text-red-600 text-lg md:text-2xl" title="Cancel">✕</button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 group">
-                  <span className="text-[#b89cff]">{user.displayName || user.fullname}</span>! 👋
+                <div className="flex items-center gap-1.5 sm:gap-2 group min-w-0">
+                  <span className="text-[#b89cff] truncate">{(user.displayName || user.fullname || "").trim()}</span><span className="whitespace-nowrap">! 👋</span>
                   <button
                     onClick={() => { setIsEditingName(true); setEditedName(user.displayName || user.fullname); }}
-                    className="text-slate-400 hover:text-[#b89cff] opacity-0 group-hover:opacity-100 transition-opacity text-lg md:text-xl cursor-pointer"
+                    className="text-slate-400 hover:text-[#b89cff] opacity-0 group-hover:opacity-100 transition-opacity text-base md:text-xl cursor-pointer shrink-0"
                     title="Edit Name"
                   >
                     ✎
@@ -340,10 +340,10 @@ export default function Dashboard() {
               )}
             </h1>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-2xl px-4 py-2 border border-slate-200 dark:border-slate-700 shadow-sm hidden md:flex">
-              <div className="w-3 h-3 bg-[#10b981] rounded-full animate-pulse" />
-              <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">All systems active</span>
+          <div className="flex items-center">
+            <div className="flex items-center gap-2 md:gap-3 bg-white dark:bg-slate-800 rounded-2xl px-3 py-1.5 md:px-4 md:py-2 border border-slate-200 dark:border-slate-700 shadow-sm">
+              <div className="w-2 h-2 md:w-3 md:h-3 bg-[#10b981] rounded-full animate-pulse" />
+              <span className="text-slate-600 dark:text-slate-300 text-xs md:text-sm font-medium whitespace-nowrap">All systems active</span>
             </div>
           </div>
         </div>
@@ -352,31 +352,32 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Card */}
           <div className="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 md:p-8 transition-colors">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              <div className="relative">
-                <div className="w-26 h-26 rounded-full bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] p-1 relative group cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowPreview(true)}>
-                  <img
-                    src={user.avatar}
-                    alt="Profile"
-                    className="w-full h-full rounded-full object-cover border-4 border-white dark:border-slate-800"
-                  />
+            <div className="flex flex-col gap-5 sm:gap-6">
+              <div className="flex flex-row items-center gap-4 sm:gap-6">
+                <div className="relative shrink-0">
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] p-1 relative group cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowPreview(true)}>
+                    <img
+                      src={user.avatar}
+                      alt="Profile"
+                      className="w-full h-full rounded-full object-cover border-4 border-white dark:border-slate-800"
+                    />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-8 sm:h-8 bg-[#10b981] rounded-full flex items-center justify-center text-white text-xs sm:text-sm border-2 sm:border-4 border-white dark:border-slate-800">
+                    ✓
+                  </div>
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#10b981] rounded-full flex items-center justify-center text-white text-sm border-4 border-white dark:border-slate-800">
-                  ✓
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-[#b89cff] text-xs sm:text-sm font-medium mb-0.5 sm:mb-1">Health Enthusiast</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white truncate">{editedName}</h2>
                 </div>
               </div>
 
-              <div className="flex-1">
-                <p className="text-[#b89cff] text-sm font-medium mb-1">Health Enthusiast</p>
-                {/* <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">{user.fullname}</h2> */}
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">{editedName}</h2>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <LightStatCard title="Height" value={`${user.height} cm`} icon="📏" />
-                  <LightStatCard title="Weight" value={`${user.weight} kg`} icon="⚖️" />
-                  <LightStatCard title="Goal" value={user.goal} icon="🎯" highlight />
-                  <LightStatCard title="BMI" value={bmi} subtitle={bmiStatus} icon="💪" color={bmiColor} />
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-4 mt-6">
+                <LightStatCard title="Height" value={`${user.height} cm`} icon="📏" />
+                <LightStatCard title="Weight" value={`${user.weight} kg`} icon="⚖️" />
+                <LightStatCard title="Goal" value={user.goal} icon="🎯" highlight />
+                <LightStatCard title="BMI" value={bmi} subtitle={bmiStatus} icon="💪" color={bmiColor} />
               </div>
             </div>
           </div>
@@ -391,8 +392,8 @@ export default function Dashboard() {
                 Current Streak
               </p>
               <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-6xl md:text-7xl font-bold">🔥</span>
-                <span className="text-5xl md:text-6xl font-bold text-white">{user.streak}</span>
+                <span className="text-5xl md:text-7xl font-bold">🔥</span>
+                <span className="text-4xl md:text-6xl font-bold text-white truncate">{user.streak}</span>
               </div>
               <p className="text-white/80 text-lg mb-4">Days in a row</p>
 
@@ -406,7 +407,7 @@ export default function Dashboard() {
         </div>
 
         {/* MIDDLE SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Today's Activity */}
           <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 transition-colors">
             <div className="flex items-center justify-between mb-6">
@@ -450,19 +451,19 @@ export default function Dashboard() {
 
             <div className="w-full overflow-x-auto">
               {/* Header Row */}
-              <div className="grid grid-cols-8 gap-2 mb-2 min-w-[500px]">
+              <div className="grid grid-cols-[50px_repeat(7,1fr)] sm:grid-cols-[70px_repeat(7,1fr)] md:grid-cols-[80px_repeat(7,1fr)] gap-0.5 sm:gap-2 mb-2 min-w-full">
                 <div className="col-span-1"></div>
                 {habitData.map((d, i) => (
-                  <div key={i} className="text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
-                    {d.day}
+                  <div key={i} className="text-center text-[10px] sm:text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    {d.day.substring(0, 3)}
                   </div>
                 ))}
               </div>
 
               {/* Habit Rows */}
               {['Exercise', 'Diet', 'SkinCare', 'Water'].map((habit) => (
-                <div key={habit} className="grid grid-cols-8 gap-2 mb-3 items-center min-w-[500px]">
-                  <div className="col-span-1 text-sm font-medium text-slate-700 dark:text-slate-300">
+                <div key={habit} className="grid grid-cols-[50px_repeat(7,1fr)] sm:grid-cols-[70px_repeat(7,1fr)] md:grid-cols-[80px_repeat(7,1fr)] gap-0.5 sm:gap-2 mb-3 items-center min-w-full">
+                  <div className="col-span-1 text-[9px] sm:text-xs md:text-sm font-medium text-slate-700 dark:text-slate-300 truncate pr-1" title={habit}>
                     {habit}
                   </div>
                   {habitData.map((dayData, index) => {
@@ -477,19 +478,19 @@ export default function Dashboard() {
                       <div key={index} className="flex justify-center">
                         <div
                           className={`
-                            w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300
+                            w-5 h-5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-300
                             ${isDone
-                              ? 'bg-gradient-to-br from-[#4ade80] to-[#22c55e] shadow-md shadow-green-200 dark:shadow-green-900/30 scale-95'
-                              : 'bg-slate-100 dark:bg-slate-700 scale-90 opacity-70'}
+                              ? 'bg-gradient-to-br from-[#4ade80] to-[#22c55e] shadow-md shadow-green-200 dark:shadow-green-900/30 sm:scale-95'
+                              : 'bg-slate-100 dark:bg-slate-700 sm:scale-90 opacity-70'}
                           `}
                           title={`${dayData.day}: ${habit} ${isDone ? 'Completed' : 'Missed'}`}
                         >
                           {isDone ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 sm:w-5 sm:h-5 text-white">
                               <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                             </svg>
                           ) : (
-                            <div className="w-2 h-2 rounded-full bg-white dark:bg-slate-500"></div>
+                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white dark:bg-slate-500"></div>
                           )}
                         </div>
                       </div>
@@ -560,7 +561,7 @@ export default function Dashboard() {
         </div>
 
         {/* BOTTOM SECTION */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-6">
           <LightQuickStatCard
             title="Weekly Exercise"
             value={`${weeklyStats.exercise}/7 days`}
@@ -588,15 +589,15 @@ export default function Dashboard() {
             progress={skincarePercent}
           />
 
-          <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 flex items-center gap-4 transition-colors">
-            <div className="w-20 h-20 relative">
-              <PieChart width={80} height={80}>
+          <div className="bg-white dark:bg-slate-800/80 rounded-2xl sm:rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-3 sm:p-6 flex flex-col sm:flex-row items-center gap-2 sm:gap-4 transition-colors text-center sm:text-left justify-center">
+            <div className="w-14 h-14 sm:w-20 sm:h-20 relative shrink-0">
+              <PieChart width="100%" height="100%">
                 <Pie
                   data={weeklyProgress}
-                  cx={40}
-                  cy={40}
-                  innerRadius={28}
-                  outerRadius={36}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="70%"
+                  outerRadius="90%"
                   paddingAngle={0}
                   dataKey="value"
                   startAngle={90}
@@ -609,12 +610,12 @@ export default function Dashboard() {
                 </Pie>
               </PieChart>
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
-                <span className="text-lg font-bold text-slate-800 dark:text-white leading-none text-center block mt-[2px]">{overallPercent}%</span>
+                <span className="text-xs sm:text-lg font-bold text-slate-800 dark:text-white leading-none text-center block mt-[2px]">{overallPercent}%</span>
               </div>
             </div>
-            <div>
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Weekly Goal</p>
-              <p className="text-2xl font-bold text-slate-800 dark:text-white">
+            <div className="min-w-0">
+              <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-sm font-medium mb-0.5 sm:mb-0 leading-tight">Weekly Goal</p>
+              <p className="text-[11px] sm:text-xl lg:text-2xl font-bold text-slate-800 dark:text-white leading-tight">
                 {overallPercent >= 75 ? "On Track" : overallPercent >= 50 ? "Almost there" : "Needs Focus"}
               </p>
             </div>
@@ -766,21 +767,21 @@ export default function Dashboard() {
 
 function LightStatCard({ title, value, subtitle, icon, highlight = false, color }) {
   return (
-    <div className={`p-4 rounded-2xl border transition-all duration-300 ${highlight
+    <div className={`p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 min-w-0 flex flex-col justify-center ${highlight
       ? 'bg-[#b89cff]/10 border-[#b89cff]/30'
       : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 hover:border-[#b89cff]/30'
       }`}>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg">{icon}</span>
-        <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider font-semibold">
+      <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2 min-w-0">
+        <span className="text-sm sm:text-base md:text-lg shrink-0">{icon}</span>
+        <p className="text-slate-500 dark:text-slate-400 text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider font-semibold truncate" title={title}>
           {title}
         </p>
       </div>
-      <p className={`text-xl font-bold ${highlight ? 'text-[#7f2dd0] dark:text-[#c4b5fd]' : 'text-slate-800 dark:text-white'}`}>
+      <p className={`text-sm sm:text-base md:text-xl font-bold truncate ${highlight ? 'text-[#7f2dd0] dark:text-[#c4b5fd]' : 'text-slate-800 dark:text-white'}`} title={value}>
         {value}
       </p>
       {subtitle && (
-        <p className="text-xs mt-1" style={{ color: color || '#64748b' }}>
+        <p className="text-[9px] sm:text-[10px] md:text-xs mt-0.5 sm:mt-1 truncate" style={{ color: color || '#64748b' }}>
           {subtitle}
         </p>
       )}
@@ -793,18 +794,18 @@ function LightActivityRow({ label, value, time, icon }) {
   const isPending = value === "Pending";
 
   return (
-    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:border-[#b89cff]/30 transition-all group">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${isDone ? 'bg-[#10b981]/10' : isPending ? 'bg-[#f59e0b]/10' : 'bg-slate-100 dark:bg-slate-600'
+    <div className="flex items-center justify-between p-2 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:border-[#b89cff]/30 transition-all group gap-2">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <div className={`w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-lg flex items-center justify-center text-base sm:text-lg ${isDone ? 'bg-[#10b981]/10' : isPending ? 'bg-[#f59e0b]/10' : 'bg-slate-100 dark:bg-slate-600'
           }`}>
           {icon}
         </div>
-        <div>
-          <p className="font-semibold text-slate-800 dark:text-white text-sm">{label}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{time}</p>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-slate-800 dark:text-white text-xs sm:text-sm leading-tight truncate" title={label}>{label}</p>
+          <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 leading-tight mt-0.5 truncate" title={time}>{time}</p>
         </div>
       </div>
-      <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${isDone
+      <span className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shrink-0 text-center ${isDone
         ? 'bg-[#10b981]/10 text-[#059669] dark:text-[#34d399] border border-[#10b981]/20'
         : isPending
           ? 'bg-[#f59e0b]/10 text-[#d97706] dark:text-[#fbbf24] border border-[#f59e0b]/20'
@@ -827,21 +828,21 @@ function LightLegendItem({ color, label }) {
 
 function LightQuickStatCard({ title, value, subtitle, icon, color, progress }) {
   return (
-    <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-6 transition-colors">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{title}</p>
-          <p className="text-3xl font-bold" style={{ color }}>{value}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>
+    <div className="bg-white dark:bg-slate-800/80 rounded-2xl sm:rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-4 sm:p-6 transition-colors flex flex-col justify-between">
+      <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-slate-500 dark:text-slate-400 text-[11px] sm:text-sm font-medium mb-1 leading-tight">{title}</p>
+          <p className="text-base sm:text-2xl lg:text-3xl font-bold" style={{ color }}>{value}</p>
+          <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 leading-tight">{subtitle}</p>
         </div>
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+          className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-base sm:text-2xl shrink-0"
           style={{ backgroundColor: `${color}15`, color: color }}
         >
           {icon}
         </div>
       </div>
-      <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+      <div className="h-1.5 sm:h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden mt-auto">
         <div
           className="h-full rounded-full transition-all duration-1000"
           style={{ width: `${progress}%`, backgroundColor: color }}

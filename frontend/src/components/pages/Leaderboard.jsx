@@ -190,30 +190,34 @@ export default function Leaderboard() {
                 </div>
 
                 <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 overflow-hidden backdrop-blur-sm">
-                    {/* Table Header */}
-                    <div className="grid grid-cols-[60px_1fr_100px_100px_80px] px-6 py-3 bg-slate-50/80 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                        <span>Rank</span>
-                        <span>Player</span>
-                        <span className="text-center">Points</span>
-                        <span className="text-center">Streak</span>
-                        <span className="text-center">Progress</span>
-                    </div>
+                    <div className="overflow-x-auto">
+                        <div className="min-w-[500px]">
+                            {/* Table Header */}
+                            <div className="grid grid-cols-[60px_1fr_100px_100px_80px] px-6 py-3 bg-slate-50/80 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                <span>Rank</span>
+                                <span>Player</span>
+                                <span className="text-center">Points</span>
+                                <span className="text-center">Streak</span>
+                                <span className="text-center">Progress</span>
+                            </div>
 
-                    <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
-                        {leaderboard.length === 0 ? (
-                            <EmptyState />
-                        ) : (
-                            leaderboard.map((user, i) => (
-                                <LeaderboardRow
-                                    key={user._id || i}
-                                    user={user}
-                                    index={i}
-                                    isCurrentUser={user.isCurrentUser}
-                                    maxPoints={maxPoints}
-                                    animateIn={animateIn}
-                                />
-                            ))
-                        )}
+                            <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                                {leaderboard.length === 0 ? (
+                                    <EmptyState />
+                                ) : (
+                                    leaderboard.map((user, i) => (
+                                        <LeaderboardRow
+                                            key={user._id || i}
+                                            user={user}
+                                            index={i}
+                                            isCurrentUser={user.isCurrentUser}
+                                            maxPoints={maxPoints}
+                                            animateIn={animateIn}
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -321,7 +325,7 @@ function PodiumCard({ user, rank, podiumHeight, gradientFrom, gradientTo, darkGr
 
             {/* User Card */}
             <div className={`relative w-full mb-0 z-10 ${isFirst ? 'animate-glow-pulse' : ''}`}>
-                <div className={`${bgAccent} rounded-2xl p-4 text-center shadow-xl border border-white/50 dark:border-slate-600 transform transition-all duration-300 hover:scale-105 cursor-pointer`}>
+                <div className={`${bgAccent} rounded-2xl p-4 pb-7 text-center shadow-xl border border-white/50 dark:border-slate-600 transform transition-all duration-300 hover:scale-105 cursor-pointer`}>
                     {/* Avatar */}
                     <div className={`w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br ${gradientFrom} ${gradientTo} ${darkGradientFrom} ${darkGradientTo} flex items-center justify-center text-2xl font-bold text-white ring-4 ${ringColor} shadow-lg ${isFirst ? 'w-20 h-20 text-3xl' : ''}`}>
                         {user.fullname?.charAt(0)?.toUpperCase()}

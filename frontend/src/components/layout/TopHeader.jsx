@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
 
-export default function TopHeader() {
+export default function TopHeader({ setSidebarOpen, isSidebarOpen }) {
   const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState(null);
 
@@ -44,10 +44,21 @@ export default function TopHeader() {
     : "U";
 
   return (
-    <div className="relative z-50 flex items-center justify-between h-16 px-4 md:px-6 lg:px-8 bg-white/80 dark:bg-transparent backdrop-blur-sm border-b border-slate-100 dark:border-transparent">
+    <div className="relative z-30 flex items-center justify-between h-16 px-4 md:px-6 lg:px-8 bg-white/80 dark:bg-transparent backdrop-blur-sm border-b border-slate-100 dark:border-transparent">
 
       {/* LEFT SIDE — User Profile (name + membership) & Theme Toggle */}
       <div className="flex items-center gap-4">
+        {/* Hamburger Menu (Mobile Only) */}
+        <button
+          onClick={() => setSidebarOpen(!isSidebarOpen)}
+          className="md:hidden p-2 -ml-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          aria-label="Toggle menu"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+
         {/* User Avatar & Info */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#06b6d4] to-[#10b981] flex items-center justify-center text-white text-xs font-bold shadow-md shadow-cyan-200/30 dark:shadow-cyan-900/30 ring-2 ring-white/50 dark:ring-slate-700/50">

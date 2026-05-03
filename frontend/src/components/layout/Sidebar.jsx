@@ -69,8 +69,8 @@ export default function Sidebar({ open, setOpen }) {
       {/* Sidebar */}
       <div
         className={`fixed top-0 left-0 h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-700 shadow-2xl
-        ${open ? "w-64" : "w-20"} 
-        transition-all duration-300 z-40 flex flex-col`}
+        ${open ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0 w-64 md:w-20"} 
+        transition-all duration-300 z-50 flex flex-col`}
       >
         {/* Logo Section — Click to Toggle Sidebar */}
         <div
@@ -85,7 +85,6 @@ export default function Sidebar({ open, setOpen }) {
             {open && (
               <div>
                 <h1 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">HealthAI</h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Pro</p>
               </div>
             )}
           </div>
@@ -165,27 +164,6 @@ export default function Sidebar({ open, setOpen }) {
             </div>
           )} */}
 
-          {/* Logout Button */}
-          <div className={`${!open ? 'flex justify-center' : ''}`}>
-            <button
-              onClick={logoutUser}
-              className={`group relative flex items-center gap-3 w-full px-3 py-3 rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-300 ${!open && 'justify-center'}`}
-              title={!open ? 'Logout' : ''}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              {open && <span className="text-sm font-medium cursor-pointer">Logout</span>}
-              {!open && (
-                <div className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                  Logout
-                </div>
-              )}
-            </button>
-          </div>
-
           {/* User Mini Profile */}
           <div className={`flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 ${!open && 'justify-center'}`}>
 
@@ -207,7 +185,7 @@ export default function Sidebar({ open, setOpen }) {
       {/* Mobile Overlay */}
       {open && (
         <div
-          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 lg:hidden"
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setOpen(false)}
         />
       )}

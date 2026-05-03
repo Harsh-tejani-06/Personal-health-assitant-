@@ -443,21 +443,20 @@ export default function RecipesStream() {
       </aside>
 
       {/* Header with Calendar */}
-      <div className="relative bg-white dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700 px-6 py-4 shadow-sm backdrop-blur-sm transition-colors">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <div className="relative bg-white dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 py-3 md:py-4 shadow-sm backdrop-blur-sm transition-colors">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-
-            <div className="w-10 h-10 bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] rounded-xl flex items-center justify-center text-white text-xl">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#b89cff] to-[#7f2dd0] rounded-xl flex items-center justify-center text-white text-lg md:text-xl shrink-0">
               🍳
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-800 dark:text-white">AI Recipe Assistant</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Real-time recipe generation</p>
+              <h1 className="text-lg md:text-xl font-bold text-slate-800 dark:text-white leading-tight">AI Recipe Assistant</h1>
+              <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">Real-time recipe generation</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-600">
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-600">
               <span className={`w-2 h-2 rounded-full animate-pulse ${isStreaming ? 'bg-[#b89cff]' : 'bg-[#10b981]'}`} />
               {isStreaming ? 'Generating...' : 'Online'}
             </div>
@@ -660,8 +659,8 @@ export default function RecipesStream() {
                           ))}
                         </div>
                       )}
-                      <p className="text-sm leading-relaxed">{msg.text}</p>
-                      <p className="text-xs mt-2 text-white/70">
+                      <p className="text-xs md:text-sm leading-relaxed">{msg.text}</p>
+                      <p className="text-[10px] md:text-xs mt-2 text-white/70">
                         {msg.timestamp?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
@@ -712,8 +711,8 @@ export default function RecipesStream() {
                         </>
                       ) : (
                         <>
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                          <p className="text-xs mt-2 text-slate-400 dark:text-slate-500">
+                          <p className="text-xs md:text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                          <p className="text-[10px] md:text-xs mt-2 text-slate-400 dark:text-slate-500">
                             {msg.timestamp?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </>
@@ -918,20 +917,20 @@ function RecipeCard({ recipe }) {
   return (
     <div className="bg-white dark:bg-slate-800">
       <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-[#b89cff]/5 to-transparent dark:from-[#b89cff]/10">
-        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">{recipe.recipe_name || "Recipe"}</h3>
-        <div className="flex flex-wrap gap-2">
+        <h3 className="text-base md:text-lg font-bold text-slate-800 dark:text-white mb-2">{recipe.recipe_name || "Recipe"}</h3>
+        <div className="flex flex-wrap gap-1.5 md:gap-2">
           {recipe.best_time && (
-            <span className="px-2 py-1 bg-[#b89cff]/10 text-[#7f2dd0] dark:text-[#c4b5fd] text-xs rounded-full font-medium">
+            <span className="px-2 py-1 bg-[#b89cff]/10 text-[#7f2dd0] dark:text-[#c4b5fd] text-[10px] md:text-xs rounded-full font-medium">
               🕐 {recipe.best_time}
             </span>
           )}
           {recipe.calories && (
-            <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full font-medium">
+            <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[10px] md:text-xs rounded-full font-medium">
               🔥 {recipe.calories} cal
             </span>
           )}
           {recipe.protein && (
-            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full font-medium">
+            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] md:text-xs rounded-full font-medium">
               💪 {recipe.protein} protein
             </span>
           )}
@@ -947,7 +946,7 @@ function RecipeCard({ recipe }) {
             </h4>
             <ul className="space-y-1">
               {ingredients.slice(0, expanded ? undefined : 5).map((ingredient, i) => (
-                <li key={i} className="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                <li key={i} className="text-xs md:text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2">
                   <span className="w-1.5 h-1.5 bg-[#b89cff] rounded-full mt-2 shrink-0" />
                   <span>{renderBoldText(ingredient)}</span>
                 </li>
@@ -969,7 +968,7 @@ function RecipeCard({ recipe }) {
             </h4>
             <ol className="space-y-2">
               {steps.slice(0, expanded ? undefined : 3).map((step, i) => (
-                <li key={i} className="text-sm text-slate-600 dark:text-slate-400 flex gap-3">
+                <li key={i} className="text-xs md:text-sm text-slate-600 dark:text-slate-400 flex gap-3">
                   <span className="w-5 h-5 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
                     {i + 1}
                   </span>
@@ -1049,7 +1048,7 @@ function StarredRecipeCard({ item, index = 0, onRemove, onAddToDiet }) {
 
           {/* Recipe Info */}
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-1.5 leading-tight">
+            <h4 className="text-xs md:text-sm font-bold text-slate-800 dark:text-white mb-1.5 leading-tight">
               {recipe.recipe_name || "Recipe"}
             </h4>
             <div className="flex flex-wrap gap-1.5">
