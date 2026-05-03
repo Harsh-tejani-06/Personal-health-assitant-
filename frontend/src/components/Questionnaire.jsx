@@ -29,7 +29,7 @@ export default function Questionnaire() {
   const mandatoryFields = {
     1: ["ageGroup", "gender", "height", "weight"],
     2: ["primaryGoal", "activityLevel", "dietType"],
-    3: ["monthlyFoodBudget", "sleepHours", "skinType", "waterIntakeLiters"]
+    3: ["sleepHours", "skinType", "waterIntakeLiters"]
   };
 
 
@@ -79,8 +79,8 @@ export default function Questionnaire() {
         stepErrors.waterIntakeLiters = "Please enter a valid amount";
         isValid = false;
       }
-      if (form.monthlyFoodBudget && isNaN(form.monthlyFoodBudget)) {
-        stepErrors.monthlyFoodBudget = "Please enter a valid amount";
+      if (form.monthlyFoodBudget && (isNaN(form.monthlyFoodBudget) || Number(form.monthlyFoodBudget) < 0)) {
+        stepErrors.monthlyFoodBudget = "Please enter a valid positive amount";
         isValid = false;
       }
     }
@@ -143,8 +143,8 @@ export default function Questionnaire() {
     1: [
       { type: 'select', label: "Age Group", name: "ageGroup", options: ["Under 18", "18‑25", "26‑35", "36‑45", "46‑60", "60+"] },
       { type: 'select', label: "Gender", name: "gender", options: ["Male", "Female", "Other"] },
-      { type: 'input', label: "Height (cm)", name: "height", placeholder: "e.g., 175", inputType: "number" },
-      { type: 'input', label: "Weight (kg)", name: "weight", placeholder: "e.g., 70", inputType: "number" },
+      { type: 'input', label: "Height (cm)", name: "height", placeholder: "e.g., 175", inputType: "number", min: 30, max: 300 },
+      { type: 'input', label: "Weight (kg)", name: "weight", placeholder: "e.g., 70", inputType: "number", min: 1, max: 700 },
     ],
     2: [
       { type: 'select', label: "Primary Health Goal", name: "primaryGoal", options: ["weight_loss", "weight_gain", "maintain_fitness", "improve_stamina", "better_skin", "general_wellness"] },
@@ -153,7 +153,7 @@ export default function Questionnaire() {
       { type: 'input', label: "Allergies (if any)", name: "allergies", placeholder: "e.g., Nuts, Dairy (Optional)", isOptional: true },
     ],
     3: [
-      { type: 'input', label: "Monthly Meal Budget (₹)", name: "monthlyFoodBudget", placeholder: "e.g., 500", inputType: "number" },
+      { type: 'input', label: "Monthly Meal Budget (₹)", name: "monthlyFoodBudget", placeholder: "e.g., 5000 (Optional)", inputType: "number", min: 0, isOptional: true },
       { type: 'input', label: "Sleep Hours per Night", name: "sleepHours", placeholder: "e.g., 7.5", inputType: "number" },
       { type: 'select', label: "Skin Type", name: "skinType", options: ["oily", "dry", "combination", "normal", "sensitive"] },
       { type: 'input', label: "Daily Water Intake (Liters)", name: "waterIntakeLiters", placeholder: "e.g., 2.5", inputType: "number" },
@@ -343,6 +343,8 @@ export default function Questionnaire() {
                   error={errors[field.name]}
                   inputType={field.inputType}
                   isOptional={field.isOptional}
+                  min={field.min}
+                  max={field.max}
                 />
               )
             ))}
@@ -468,7 +470,7 @@ function getIcon(fieldName) {
 }
 
 /* INPUT COMPONENT */
-function Input({ label, name, value, placeholder, handleChange, icon, error, inputType = "text", isOptional = false }) {
+function Input({ label, name, value, placeholder, handleChange, icon, error, inputType = "text", isOptional = false, min, max }) {
   return (
     <div className="group">
       <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
@@ -484,6 +486,8 @@ function Input({ label, name, value, placeholder, handleChange, icon, error, inp
           value={value}
           placeholder={placeholder}
           onChange={handleChange}
+          min={min}
+          max={max}
           className={`w-full px-4 py-3.5 rounded-xl border text-slate-800 placeholder-slate-400 bg-slate-50 focus:bg-white focus:outline-none transition-all duration-300 ${error
             ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100'
             : 'border-slate-200 focus:border-[#06b6d4] focus:ring-4 focus:ring-[#06b6d4]/10'

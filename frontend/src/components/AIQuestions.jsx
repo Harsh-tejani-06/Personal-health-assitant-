@@ -58,33 +58,28 @@ export default function AIQuestions() {
 
 
     const handleOptionChange = (questionIndex, option) => {
-        setAnswers(prev => ({
-            ...prev,
-            [questionIndex]: option
-        }));
-
-        // Auto-advance after selection with delay for better UX
-        setTimeout(() => {
-            if (questionIndex < questions.length - 1) {
-                setCurrentQuestion(questionIndex + 1);
-            }
-        }, 400);
+        setAnswers(prev => {
+            const current = prev[questionIndex] || [];
+            const updated = current.includes(option)
+                ? current.filter(o => o !== option)
+                : [...current, option];
+            return { ...prev, [questionIndex]: updated };
+        });
     };
 
     const handleSubmit = async () => {
         // Check if all questions answered
-        const answeredCount = Object.keys(answers).length;
-        if (answeredCount < questions.length) {
-            const firstUnanswered = questions.findIndex((_, idx) => !answers[idx]);
-            setCurrentQuestion(firstUnanswered);
+        const unansweredIdx = questions.findIndex((_, idx) => !answers[idx] || answers[idx].length === 0);
+        if (unansweredIdx !== -1) {
+            setCurrentQuestion(unansweredIdx);
             return;
         }
 
         setIsSubmitting(true);
         try {
-            const formattedAnswers = Object.entries(answers).map(([idx, answer]) => ({
+            const formattedAnswers = Object.entries(answers).map(([idx, answerArr]) => ({
                 question: questions[idx].question,
-                answer
+                answer: Array.isArray(answerArr) ? answerArr.join(", ") : answerArr
             }));
 
             await saveAIAnswers(formattedAnswers);
@@ -128,7 +123,7 @@ export default function AIQuestions() {
 
     // Update progress
     useEffect(() => {
-        const answered = Object.keys(answers).length;
+        const answered = Object.values(answers).filter(a => Array.isArray(a) ? a.length > 0 : !!a).length;
         setProgress((answered / questions.length) * 100);
     }, [answers, questions.length]);
 
@@ -223,7 +218,7 @@ export default function AIQuestions() {
                     <div className="space-y-6 max-w-3xl mx-auto">
                         {questions.map((q, index) => {
                             const isActive = index === currentQuestion;
-                            const isAnswered = answers[index] !== undefined;
+                            const isAnswered = Array.isArray(answers[index]) ? answers[index].length > 0 : !!answers[index];
 
 
                             return (
@@ -276,36 +271,40 @@ export default function AIQuestions() {
                     ${isActive ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}
                   `}>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                                            {q.options.map((opt, i) => (
-                                                <label
-                                                    key={i}
-                                                    className={`
+                                            {q.options.map((opt, i) => {
+                                                const selectedOptions = answers[index] || [];
+                                                const isChecked = selectedOptions.includes(opt);
+                                                return (
+                                                    <label
+                                                        key={i}
+                                                        className={`
                             relative flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-300
-                            ${answers[index] === opt
-                                                            ? 'border-[#06b6d4] bg-[#06b6d4]/5 shadow-md'
-                                                            : 'border-slate-200 hover:border-[#06b6d4]/50 hover:bg-slate-50'
-                                                        }
+                            ${isChecked
+                                                                ? 'border-[#06b6d4] bg-[#06b6d4]/5 shadow-md'
+                                                                : 'border-slate-200 hover:border-[#06b6d4]/50 hover:bg-slate-50'
+                                                            }
                           `}
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        name={`q-${index}`}
-                                                        checked={answers[index] === opt}
-                                                        onChange={() => handleOptionChange(index, opt)}
-                                                        className="w-5 h-5 text-[#06b6d4] border-slate-300 focus:ring-[#06b6d4] focus:ring-2"
-                                                    />
-                                                    <span className={`ml-3 font-medium ${answers[index] === opt ? 'text-[#0891b2]' : 'text-slate-700'}`}>
-                                                        {opt}
-                                                    </span>
-                                                    {answers[index] === opt && (
-                                                        <div className="absolute right-4 text-[#06b6d4]">
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                            </svg>
-                                                        </div>
-                                                    )}
-                                                </label>
-                                            ))}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            name={`q-${index}`}
+                                                            checked={isChecked}
+                                                            onChange={() => handleOptionChange(index, opt)}
+                                                            className="w-5 h-5 rounded text-[#06b6d4] border-slate-300 focus:ring-[#06b6d4] focus:ring-2 accent-[#06b6d4]"
+                                                        />
+                                                        <span className={`ml-3 font-medium ${isChecked ? 'text-[#0891b2]' : 'text-slate-700'}`}>
+                                                            {opt}
+                                                        </span>
+                                                        {isChecked && (
+                                                            <div className="absolute right-4 text-[#06b6d4]">
+                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            </div>
+                                                        )}
+                                                    </label>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 </div>
@@ -339,7 +338,7 @@ export default function AIQuestions() {
                         ) : (
                             <button
                                 onClick={handleSubmit}
-                                disabled={isSubmitting || Object.keys(answers).length < questions.length}
+                                disabled={isSubmitting || questions.some((_, idx) => !answers[idx] || (Array.isArray(answers[idx]) && answers[idx].length === 0))}
                                 className="flex-1 py-4 px-6 bg-gradient-to-r from-[#10b981] to-[#059669] text-white font-bold rounded-xl shadow-lg shadow-[#10b981]/25 hover:shadow-xl hover:shadow-[#10b981]/30 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {isSubmitting ? (
